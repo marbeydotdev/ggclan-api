@@ -1,6 +1,16 @@
+using Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "dev",
+        policy  =>
+        {
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+        });
+});
 
 // Add services to the container.
 
@@ -17,6 +27,7 @@ builder.Services.AddAuthentication(options =>
     options.Authority = "https://dev-v6k2m4w3utyj8q38.us.auth0.com/";
     options.Audience = "ggclan502";
 });
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
@@ -28,6 +39,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
