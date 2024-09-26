@@ -4,6 +4,7 @@ namespace Domain.Entities;
 
 public class User : BaseEntity
 {
-    public string Username { get; set; } = null!;
-    public List<ClanMember> ParticipatesIn { get; set; } = [];
+    public string NameIdentifier  { get; set; } = null!;
+    public Profile Profile { get; set; } = new Profile();
+    public List<ClanMember> Clans { get; set; } = [];
 }

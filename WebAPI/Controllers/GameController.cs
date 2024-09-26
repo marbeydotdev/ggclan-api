@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("game")]
+[Route("v1/game")]
 
 public class GameController: ControllerBase
 {
