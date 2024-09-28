@@ -38,7 +38,7 @@ public class UserRepository
         return Result.Ok(user);
     }
 
-    public async Task<Result> UpdateAsync(User user)
+    public async Task<Result> UpdateProfileAsync(User user)
     {
         if (!await UserExists(user.NameIdentifier))
         {

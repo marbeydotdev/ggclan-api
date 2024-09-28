@@ -36,11 +36,16 @@ public class UserController : ControllerBase
     [HttpPost("update")]
     public async Task<IActionResult> UpdateUserAsync([FromBody] ProfileDto profile)
     {
-        Console.WriteLine("12312312312312");
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        
         user.Profile = _mapper.Map(profile, user.Profile);
-        var success = await _userRepository.UpdateAsync(user);
+        var success = await _userRepository.UpdateProfileAsync(user);
 
-        return Ok(success.Errors);
+        if (success.IsFailed)
+        {
+            return BadRequest(success.Errors);
+        }
+        
+        return Ok();
     }
 }

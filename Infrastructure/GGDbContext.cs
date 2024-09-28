@@ -12,6 +12,7 @@ public class GGDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<User>().OwnsOne(u => u.Profile);
     }
     
     public DbSet<User> Users { get; set; }
