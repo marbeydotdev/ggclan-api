@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Domain.Common;
 
-namespace Domain.Entities;
+namespace WebAPI.DTO;
 
-public class Clan : BaseEntity
+public class CreateClanDto
 {
+    [MaxLength(100)]
     public string Name { get; set; } = null!;
+    [MaxLength(5000)]
     public string Description { get; set; } = null!;
     public bool Private { get; set; } = false; // if true, won't show up in the clan browser
-    public List<ClanMessage> Messages { get; set; } = [];
-    public List<ClanMember> Members { get; set; } = [];
 }
