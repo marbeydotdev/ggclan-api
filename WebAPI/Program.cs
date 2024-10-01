@@ -13,7 +13,6 @@ var domain = builder.Configuration["Auth0:Domain"];
 
 var corsPolicy = "dev";
 
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

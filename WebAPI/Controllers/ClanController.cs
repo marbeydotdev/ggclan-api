@@ -2,6 +2,7 @@ using Application.Services;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using FluentResults;
 using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,8 @@ public class ClanController : ControllerBase
             .Where(clan => !clan.Private)
             .Skip(page * ResultsPerPage)
             .Take(ResultsPerPage)
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .ToListAsync();
         
         return Ok(_mapper.Map<ClanDto>(clans));
@@ -57,7 +60,6 @@ public class ClanController : ControllerBase
         var ent = _context.Clans.Add(newClan);
         ent.Entity.Members.Add(new ClanMember
         {
-            ClanId = newClan.Id,
             UserId = user.Id,
             Role = ClanMemberRole.Owner
         });
@@ -76,8 +78,46 @@ public class ClanController : ControllerBase
             .Where(clan => clan.Members.Any(member => member.UserId == user.Id))
             .Skip(page * ResultsPerPage)
             .Take(ResultsPerPage)
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .ToListAsync();
 
         return Ok(_mapper.Map<IEnumerable<ClanDto>>(clans));
+    }
+
+    [Authorize]
+    [HttpGet("get/{id:int}")]
+    public async Task<IActionResult> GetClan(int id)
+    {
+        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+
+        var clan = await TryGetClan(id, user.Id);
+
+        if (clan.IsFailed)
+        {
+            return BadRequest(clan.Errors);
+        }
+
+        return Ok(clan.Value);
+    }
+
+    private async Task<Result<Clan>> TryGetClan(int clanId, int userId)
+    {
+        var clan = await _context.Clans
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(clan => clan.Id == clanId);
+
+        if (clan == null)
+        {
+            return Result.Fail("Clan not found");
+        }
+
+        if (clan.Members.All(m => m.User.Id != userId))
+        {
+            return Result.Fail("Unauthorized");
+        }
+
+        return Result.Ok(clan);
     }
 }
