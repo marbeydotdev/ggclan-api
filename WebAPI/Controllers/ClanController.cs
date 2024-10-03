@@ -2,12 +2,10 @@ using Application.Services;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
-using FluentResults;
 using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 using WebAPI.DTO;
 
 namespace WebAPI.Controllers;
@@ -19,14 +17,16 @@ public class ClanController : ControllerBase
     private readonly IMapper _mapper;
     private readonly GGDbContext _context;
     private readonly UserService _userService;
+    private readonly ClanService _clanService;
 
     private const int ResultsPerPage = 10;
 
-    public ClanController(IMapper mapper, GGDbContext context, UserService userService)
+    public ClanController(IMapper mapper, GGDbContext context, UserService userService, ClanService clanService)
     {
         _mapper = mapper;
         _context = context;
         _userService = userService;
+        _clanService = clanService;
     }
 
     [Authorize]
@@ -91,7 +91,7 @@ public class ClanController : ControllerBase
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
 
-        var clan = await TryGetClan(id, user.Id);
+        var clan = await _clanService.TryGetClan(id, user.Id);
 
         if (clan.IsFailed)
         {
@@ -100,24 +100,5 @@ public class ClanController : ControllerBase
 
         return Ok(clan.Value);
     }
-
-    private async Task<Result<Clan>> TryGetClan(int clanId, int userId)
-    {
-        var clan = await _context.Clans
-            .Include(c => c.Members)
-            .ThenInclude(m => m.User)
-            .FirstOrDefaultAsync(clan => clan.Id == clanId);
-
-        if (clan == null)
-        {
-            return Result.Fail("Clan not found");
-        }
-
-        if (clan.Members.All(m => m.User.Id != userId))
-        {
-            return Result.Fail("Unauthorized");
-        }
-
-        return Result.Ok(clan);
-    }
+    
 }

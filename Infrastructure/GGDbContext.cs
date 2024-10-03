@@ -17,4 +17,5 @@ public class GGDbContext : DbContext
     
     public DbSet<User> Users { get; set; }
     public DbSet<Clan> Clans { get; set; }
+    public DbSet<ClanMessage> ClanMessages { get; set; }
 }

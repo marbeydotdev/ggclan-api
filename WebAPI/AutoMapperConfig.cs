@@ -13,5 +13,6 @@ public class AutoMapperConfig : Profile
         CreateMap<Clan, CreateClanDto>().ReverseMap();
         CreateMap<Clan, ClanDto>().ReverseMap();
         CreateMap<ClanMember, ClanMemberDto>().ReverseMap();
+        CreateMap<ClanMessage, ClanMessageDto>().ReverseMap();
     }
 }

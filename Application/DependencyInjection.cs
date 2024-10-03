@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<GameCacheService>();
         services.AddScoped<UserService>();
+        services.AddScoped<ClanService>();
         services.AddMediatR(options => { options.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()); });
     }
 }
