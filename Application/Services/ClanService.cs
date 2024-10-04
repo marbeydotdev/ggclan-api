@@ -46,7 +46,6 @@ public class ClanService
             .Where(message => message.ClanId == clanId)
             .OrderByDescending(message => message.Created)
             .Include(message => message.ClanMember)
-            .ThenInclude(message => message.User.Id)
             .Skip(skip)
             .Take(limit)
             .ToArrayAsync();
