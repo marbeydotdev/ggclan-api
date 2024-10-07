@@ -1,4 +1,6 @@
+using Domain.Achievements;
 using Domain.Entities;
+using FluentResults;
 using Infrastructure.Repositories;
 
 namespace Application.Services;
@@ -20,9 +22,10 @@ public class UserService
         {
             var user = new User()
             {
-                NameIdentifier = nameIdentifier
+                NameIdentifier = nameIdentifier,
+                Achievements = [new AccountCreatedAchievement()]
             };
-        
+
             var newUser = await _userRepository.AddAsync(user);
 
             return newUser.Value;
@@ -30,5 +33,5 @@ public class UserService
 
         return getUser.Value;
 
-    } 
+    }
 }

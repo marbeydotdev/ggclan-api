@@ -37,6 +37,17 @@ public class UserRepository
 
         return Result.Ok(user);
     }
+    
+    public async Task<Result<User>> GetAsync(int userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(user => user.Id == userId);
+        if (user == null)
+        {
+            return Result.Fail<User>("User not found");
+        }
+
+        return Result.Ok(user);
+    }
 
     public async Task<Result> UpdateProfileAsync(User user)
     {

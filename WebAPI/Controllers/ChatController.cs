@@ -1,5 +1,6 @@
 using Application.Services;
 using AutoMapper;
+using Domain.Achievements;
 using Domain.Entities;
 using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
@@ -15,15 +16,17 @@ public class ChatController : ControllerBase
     private readonly UserService _userService;
     private readonly ClanService _clanService;
     private readonly GGDbContext _context;
+    private readonly AchievementService _achievementService;
     
     private readonly IMapper _mapper;
 
-    public ChatController(UserService userService, ClanService clanService, GGDbContext context, IMapper mapper)
+    public ChatController(UserService userService, ClanService clanService, GGDbContext context, IMapper mapper, AchievementService achievementService)
     {
         _userService = userService;
         _clanService = clanService;
         _context = context;
         _mapper = mapper;
+        _achievementService = achievementService;
     }
 
     [Authorize]
@@ -60,6 +63,7 @@ public class ChatController : ControllerBase
         };
         
         var added = await _context.ClanMessages.AddAsync(message);
+        await _achievementService.AddAchievementIfNotExists(user.Id, new FirstMessageAchievement());
         await _context.SaveChangesAsync();
 
         return Ok(_mapper.Map<ClanMessageDto>(added.Entity));

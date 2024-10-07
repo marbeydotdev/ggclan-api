@@ -12,10 +12,13 @@ public class GGDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Achievement>().ToTable("Achievements");
         modelBuilder.Entity<User>().OwnsOne(u => u.Profile);
+        modelBuilder.Entity<User>().HasMany(u => u.Achievements).WithMany();
     }
     
     public DbSet<User> Users { get; set; }
     public DbSet<Clan> Clans { get; set; }
+    public DbSet<Achievement> Achievements { get; set; }
     public DbSet<ClanMessage> ClanMessages { get; set; }
 }

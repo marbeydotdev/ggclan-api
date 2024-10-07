@@ -1,5 +1,6 @@
 using Application.Services;
 using AutoMapper;
+using Domain.Achievements;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
@@ -18,15 +19,17 @@ public class ClanController : ControllerBase
     private readonly GGDbContext _context;
     private readonly UserService _userService;
     private readonly ClanService _clanService;
+    private readonly AchievementService _achievementService;
 
     private const int ResultsPerPage = 10;
 
-    public ClanController(IMapper mapper, GGDbContext context, UserService userService, ClanService clanService)
+    public ClanController(IMapper mapper, GGDbContext context, UserService userService, ClanService clanService, AchievementService achievementService)
     {
         _mapper = mapper;
         _context = context;
         _userService = userService;
         _clanService = clanService;
+        _achievementService = achievementService;
     }
 
     [Authorize]
@@ -64,7 +67,9 @@ public class ClanController : ControllerBase
             Role = ClanMemberRole.Owner
         });
         await _context.SaveChangesAsync();
-
+        
+        await _achievementService.AddAchievementIfNotExists(user.Id, new ClanCreatedAchievement());
+        
         return Ok(_mapper.Map<ClanDto>(ent.Entity as Clan));
     }
 
