@@ -34,17 +34,18 @@ public class ClanController : ControllerBase
 
     [Authorize]
     [HttpGet("list")]
-    public async Task<IActionResult> ListClans(int page = 0)
+    public async Task<IActionResult> ListClans(int page = 0, string search = "")
     {
         var clans = await _context.Clans
             .Where(clan => !clan.Private)
+            .Where(clan => clan.Name.Contains(search))
             .Skip(page * ResultsPerPage)
             .Take(ResultsPerPage)
             .Include(c => c.Members)
             .ThenInclude(m => m.User)
             .ToListAsync();
         
-        return Ok(_mapper.Map<ClanDto>(clans));
+        return Ok(_mapper.Map<IEnumerable<ClanDto>>(clans));
     }
 
     [Authorize]

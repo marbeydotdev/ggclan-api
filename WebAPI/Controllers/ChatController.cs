@@ -40,7 +40,7 @@ public class ChatController : ControllerBase
             return BadRequest(messages.Errors);
         }
         
-        return Ok(messages.Value);
+        return Ok(_mapper.Map<IEnumerable<ClanMessageDto>>(messages.Value));
     }
 
     [Authorize]
