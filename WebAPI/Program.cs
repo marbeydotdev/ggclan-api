@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Application;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using WebAPI;
 using WebAPI.Controllers;
@@ -13,6 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 var domain = builder.Configuration["Auth0:Domain"];
 
 var corsPolicy = "dev";
+
+builder.Services.AddRateLimiter(_ => _
+    .AddFixedWindowLimiter(policyName: "fixed", options =>
+    {
+        options.PermitLimit = 3;
+        options.Window = TimeSpan.FromSeconds(5);
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 2;
+    }));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -83,7 +94,6 @@ app.UseCors(corsPolicy);
 app.UseAuthorization();
 
 app.MapHub<ChatHub>("/v1/chat");
-
 
 app.MapControllers();
 

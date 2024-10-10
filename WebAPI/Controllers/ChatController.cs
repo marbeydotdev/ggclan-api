@@ -5,12 +5,14 @@ using Domain.Entities;
 using Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WebAPI.DTO;
 
 namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("v1/chat")]
+[EnableRateLimiting("fixed")]
 public class ChatController : ControllerBase
 {
     private readonly UserService _userService;
