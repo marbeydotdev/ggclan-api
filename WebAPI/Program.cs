@@ -31,7 +31,7 @@ builder.Services
         options.AddPolicy(
             "read:messages",
             policy => policy.Requirements.Add(
-                new HasScopeRequirement("clan", domain)
+                new HasScopeRequirement("clan", domain!)
             )
         );
     });
@@ -64,7 +64,6 @@ var app = builder.Build();
 // verwijder en maak database schema, voor dev
 var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<GGDbContext>();
-db.Database.EnsureDeleted();
 db.Database.EnsureCreated();
 
 // Configure the HTTP request pipeline.

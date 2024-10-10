@@ -12,7 +12,7 @@ public class GameCacheService
 {
     private List<GameSearchCacheResult> _results = [];
 
-    public async Task<GameSearchCacheResult?> TryHitCacheAsync(string query)
+    public GameSearchCacheResult? TryHitCacheAsync(string query)
     {
         lock (_results)
         {
@@ -21,9 +21,9 @@ public class GameCacheService
         }
     }
 
-    public async Task TryAddCacheAsync(string query, List<GameSearchListingDto> results)
+    public void TryAddCacheAsync(string query, List<GameSearchListingDto> results)
     {
-        if (await TryHitCacheAsync(query) != null)
+        if (TryHitCacheAsync(query) != null)
         {
             return;
         }

@@ -23,7 +23,7 @@ public class GameSearchRequestHandler : IRequestHandler<GameSearchRequest, List<
     {
         var steamGrid = new SteamGridDb("d4797e6e1502c29aace2e94aed09f51f");
 
-        var cache = await _gameCacheService.TryHitCacheAsync(request.Query);
+        var cache = _gameCacheService.TryHitCacheAsync(request.Query);
         
         if (cache != null)
         {
@@ -49,7 +49,7 @@ public class GameSearchRequestHandler : IRequestHandler<GameSearchRequest, List<
             results.Add(game);
         }
 
-        await _gameCacheService.TryAddCacheAsync(request.Query, results);
+        _gameCacheService.TryAddCacheAsync(request.Query, results);
 
         return results;
     }
