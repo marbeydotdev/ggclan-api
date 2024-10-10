@@ -64,14 +64,17 @@ var app = builder.Build();
 // verwijder en maak database schema, voor dev
 var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<GGDbContext>();
-db.Database.EnsureCreated();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    db.Database.EnsureDeleted();
 }
+
+db.Database.EnsureCreated();
 
 app.UseHttpsRedirection();
 

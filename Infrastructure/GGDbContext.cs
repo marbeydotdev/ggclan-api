@@ -21,4 +21,5 @@ public class GGDbContext : DbContext
     public DbSet<Clan> Clans { get; set; }
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<ClanMessage> ClanMessages { get; set; }
+    public DbSet<ClanInvite> ClanInvites { get; set; }
 }
