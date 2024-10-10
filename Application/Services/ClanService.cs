@@ -33,6 +33,21 @@ public class ClanService
 
         return Result.Ok(clan);
     }
+    
+    public async Task<Result<Clan>> TryGetClan(int clanId)
+    {
+        var clan = await _context.Clans
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(clan => clan.Id == clanId);
+
+        if (clan == null)
+        {
+            return Result.Fail("Clan not found");
+        }
+        
+        return Result.Ok(clan);
+    }
 
     public async Task<Result<IEnumerable<ClanMessage>>> TryGetClanMessages(int userId, int clanId, int skip, int limit)
     {

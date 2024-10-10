@@ -106,7 +106,98 @@ public class ClanController : ControllerBase
             return BadRequest(clan.Errors);
         }
 
-        return Ok(clan.Value);
+        return Ok(_mapper.Map<ClanDto>(clan.Value));
+    }
+
+    [Authorize]
+    [HttpPost("join/{id:int}")]
+    public async Task<IActionResult> JoinClan(int id)
+    {
+        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        var clan = await _clanService.TryGetClan(id);
+        if (clan.IsFailed)
+        {
+            return BadRequest(clan.Errors);
+        }
+
+        if (clan.Value.Private)
+        {
+            return BadRequest("Clan is private.");
+        }
+
+        if (_context.ClanInvites.Any(inv => inv.UserId == user.Id && inv.ClanId == clan.Value.Id))
+        {
+            return BadRequest("Already sent invite.");
+        }
+
+        var invite = new ClanInvite
+        {
+            Clan = clan.Value,
+            User = user
+        };
+        
+        _context.ClanInvites.Add(invite);
+        
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("get/{id:int}/invites")]
+    public async Task<IActionResult> GetInvites(int id)
+    {
+        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        var clan = await _clanService.TryGetClan(id, user.Id);
+        if (clan.IsFailed)
+        {
+            return BadRequest(clan.Errors);
+        }
+
+        if (clan.Value.Members.First(c => c.UserId == user.Id).Role == ClanMemberRole.Member)
+        {
+            return BadRequest("You are not allowed to view invites.");
+        }
+        
+        var invites = await _context.ClanInvites.Include(u => u.User).Where(c => c.ClanId == clan.Value.Id).ToListAsync();
+        
+        return Ok(_mapper.Map<IEnumerable<ClanInviteDto>>(invites));
+    }
+
+    [Authorize]
+    [HttpPost("invite/accept/{id:int}")]
+    public async Task<IActionResult> AcceptInvite(int id)
+    {
+        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.ClanId == id);
+        if (invite == null)
+        {
+            return BadRequest("Invite not found.");
+        }
+        var clan  = await _clanService.TryGetClan(invite.ClanId, user.Id);
+
+        if (clan.IsFailed)
+        {
+            return BadRequest(clan.Errors);
+        }
+
+        if (clan.Value.Members.First(u => u.UserId == user.Id).Role == ClanMemberRole.Member)
+        {
+            return BadRequest("You are not allowed to accept invites.");
+        }
+        
+        clan.Value.Members.Add(new ClanMember
+        {
+            UserId = invite.UserId,
+            Role = ClanMemberRole.Member
+        });
+
+        _context.Clans.Update(clan.Value);
+        _context.ClanInvites.Remove(invite);
+        
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
     
 }
