@@ -169,7 +169,7 @@ public class ClanController : ControllerBase
     public async Task<IActionResult> AcceptInvite(int id)
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.ClanId == id);
+        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
         if (invite == null)
         {
             return BadRequest("Invite not found.");
@@ -193,6 +193,35 @@ public class ClanController : ControllerBase
         });
 
         _context.Clans.Update(clan.Value);
+        _context.ClanInvites.Remove(invite);
+        
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+    
+    [Authorize]
+    [HttpPost("invite/deny/{id:int}")]
+    public async Task<IActionResult> DenyInvite(int id)
+    {
+        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
+        if (invite == null)
+        {
+            return BadRequest("Invite not found.");
+        }
+        var clan  = await _clanService.TryGetClan(invite.ClanId, user.Id);
+
+        if (clan.IsFailed)
+        {
+            return BadRequest(clan.Errors);
+        }
+
+        if (clan.Value.Members.First(u => u.UserId == user.Id).Role == ClanMemberRole.Member)
+        {
+            return BadRequest("You are not allowed to accept or deny invites.");
+        }
+        ;
         _context.ClanInvites.Remove(invite);
         
         await _context.SaveChangesAsync();

@@ -8,7 +8,7 @@ public class CreateClanDto
     public string Name { get; set; } = null!;
     [MaxLength(5000)]
     public string Description { get; set; } = "";
-    [MaxLength(500)]
+    [MaxLength(100)]
     public string Game { get; set; } = null!;
     public bool Private { get; set; } = false; // if true, won't show up in the clan browser
 }
