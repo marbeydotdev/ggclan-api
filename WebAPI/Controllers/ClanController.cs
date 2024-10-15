@@ -1,9 +1,13 @@
-using Application.Services;
+using Application.Clans.Commands;
+using Application.Clans.Queries;
+using Application.Clans.Services;
+using Application.Users.Services;
 using AutoMapper;
-using Domain.Achievements;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
+using Infrastructure.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,38 +20,35 @@ namespace WebAPI.Controllers;
 public class ClanController : ControllerBase
 {
     private readonly IMapper _mapper;
-    private readonly GGDbContext _context;
+    private readonly GgDbContext _context;
     private readonly UserService _userService;
     private readonly ClanService _clanService;
-    private readonly AchievementService _achievementService;
+    private readonly IMediator _mediator;
+    private readonly ClanRepository _clanRepository;
 
-    private const int ResultsPerPage = 10;
-
-    public ClanController(IMapper mapper, GGDbContext context, UserService userService, ClanService clanService, AchievementService achievementService)
+    public ClanController(IMapper mapper, GgDbContext context, UserService userService, ClanService clanService, IMediator mediator, ClanRepository clanRepository)
     {
         _mapper = mapper;
         _context = context;
         _userService = userService;
         _clanService = clanService;
-        _achievementService = achievementService;
+        _mediator = mediator;
+        _clanRepository = clanRepository;
     }
 
     [Authorize]
     [HttpGet("list")]
-    public async Task<IActionResult> ListClans(int page = 0, string search = "")
+    public async Task<IActionResult> ListClans(string search = "", int skip = 0, int limit = 10)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var clans = await _context.Clans
-            .Where(clan => !clan.Private)
-            .Where(clan => clan.Name.Contains(search))
-            .Where(clan => clan.Members.All(c => c.UserId != user.Id))
-            .Skip(page * ResultsPerPage)
-            .Take(ResultsPerPage)
-            .Include(c => c.Members)
-            .ThenInclude(m => m.User)
-            .ToListAsync();
+        var clans = await _mediator.Send(new GetClansQuery
+        {
+            Skip = skip,
+            Limit = limit,
+        });
         
-        return Ok(_mapper.Map<IEnumerable<ClanDto>>(clans));
+        return clans.IsFailed ? 
+            BadRequest(clans.Errors) : 
+            Ok(_mapper.Map<IEnumerable<ClanDto>>(clans.Value));
     }
 
     [Authorize]
@@ -59,54 +60,46 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
 
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-
-        var newClan = _mapper.Map<Clan>(clan);
-
-        var ent = _context.Clans.Add(newClan);
-        ent.Entity.Members.Add(new ClanMember
+        var newClan = await _mediator.Send(new CreateClanCommand
         {
-            UserId = user.Id,
-            Role = ClanMemberRole.Owner
+            CreateClanDto = clan,
+            NameIdentifier = HttpContext.GetNameIdentifier()
         });
-        await _context.SaveChangesAsync();
         
-        await _achievementService.AddAchievementIfNotExists(user.Id, new ClanCreatedAchievement());
-        
-        return Ok(_mapper.Map<ClanDto>(ent.Entity as Clan));
+        return newClan.IsFailed ? 
+            BadRequest(newClan.Errors) : 
+            Ok(_mapper.Map<ClanDto>(newClan.Value));
     }
 
     [Authorize]
     [HttpGet("list/me")]
-    public async Task<IActionResult> GetParticipatingClans(int page = 0)
+    public async Task<IActionResult> GetParticipatingClans(int skip = 0, int limit = 10)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-
-        var clans = await _context.Clans
-            .Where(clan => clan.Members.Any(member => member.UserId == user.Id))
-            .Skip(page * ResultsPerPage)
-            .Take(ResultsPerPage)
-            .Include(c => c.Members)
-            .ThenInclude(m => m.User)
-            .ToListAsync();
-
-        return Ok(_mapper.Map<IEnumerable<ClanDto>>(clans));
+        var clans = await _mediator.Send(new GetUserClansQuery
+        {
+            NameIdentifier = HttpContext.GetNameIdentifier(),
+            Skip = skip,
+            Limit = limit
+        });
+        
+        return clans.IsFailed ? 
+            BadRequest(clans.Errors) : 
+            Ok(_mapper.Map<IEnumerable<ClanDto>>(clans.Value));
     }
-
+    
     [Authorize]
     [HttpGet("get/{id:int}")]
     public async Task<IActionResult> GetClan(int id)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-
-        var clan = await _clanService.TryGetClan(id, user.Id);
-
-        if (clan.IsFailed)
+        var clan = await _mediator.Send(new GetClanQuery
         {
-            return BadRequest(clan.Errors);
-        }
+            ClanId = id,
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
 
-        return Ok(_mapper.Map<ClanDto>(clan.Value));
+        return clan.IsFailed ? 
+            BadRequest(clan.Errors) : 
+            Ok(_mapper.Map<ClanDto>(clan.Value));
     }
 
     [Authorize]
@@ -114,25 +107,15 @@ public class ClanController : ControllerBase
     public async Task<IActionResult> JoinClan(int id)
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var clan = await _clanService.TryGetClan(id);
-        if (clan.IsFailed)
-        {
-            return BadRequest(clan.Errors);
-        }
 
-        if (clan.Value.Private)
+        if (!await _clanService.UserCanSendInvite(user.Id, id))
         {
-            return BadRequest("Clan is private.");
-        }
-
-        if (_context.ClanInvites.Any(inv => inv.UserId == user.Id && inv.ClanId == clan.Value.Id))
-        {
-            return BadRequest("Already sent invite.");
+            return BadRequest("Cannot join this clan.");
         }
 
         var invite = new ClanInvite
         {
-            Clan = clan.Value,
+            ClanId = id,
             User = user
         };
         

@@ -5,21 +5,21 @@ using MediatR;
 
 namespace Application.Games.Queries;
 
-public class GameSearchRequest: IRequest<List<GameSearchListingDto>>
+public class GetGamesQuery: IRequest<List<GameSearchListingDto>>
 {
     public string Query { get; set; } = null!;
 }
 
-public class GameSearchRequestHandler : IRequestHandler<GameSearchRequest, List<GameSearchListingDto>>
+public class GetGamesQueryHandler : IRequestHandler<GetGamesQuery, List<GameSearchListingDto>>
 {
     private readonly GameCacheService _gameCacheService;
 
-    public GameSearchRequestHandler(GameCacheService gameCacheService)
+    public GetGamesQueryHandler(GameCacheService gameCacheService)
     {
         _gameCacheService = gameCacheService;
     }
 
-    public async Task<List<GameSearchListingDto>> Handle(GameSearchRequest request, CancellationToken cancellationToken)
+    public async Task<List<GameSearchListingDto>> Handle(GetGamesQuery request, CancellationToken cancellationToken)
     {
         var steamGrid = new SteamGridDb("d4797e6e1502c29aace2e94aed09f51f");
 

@@ -1,6 +1,8 @@
 using System.Reflection;
+using Application.Clans.Services;
 using Application.Games.Services;
 using Application.Services;
+using Application.Users.Services;
 using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 

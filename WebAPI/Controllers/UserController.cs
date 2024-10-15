@@ -1,13 +1,10 @@
-using System.Security.Claims;
-using Application.Services;
+using Application.Users.Commands;
 using AutoMapper;
-using Domain.Entities;
-using Infrastructure;
-using Infrastructure.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WebAPI.DTO;
+using Profile = Domain.Entities.Profile;
 
 namespace WebAPI.Controllers;
 
@@ -15,35 +12,36 @@ namespace WebAPI.Controllers;
 [Route("v1/user")]
 public class UserController : ControllerBase
 {
-    private readonly UserService _userService;
-    private readonly UserRepository _userRepository;
-    private readonly GGDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IMediator _mediator;
 
-    public UserController(UserService userService, UserRepository userRepository, IMapper mapper, GGDbContext context)
+    public UserController(IMapper mapper, IMediator mediator)
     {
-        _userService = userService;
-        _userRepository = userRepository;
         _mapper = mapper;
-        _context = context;
+        _mediator = mediator;
     }
 
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> GetMeAsync()
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        var user = await _mediator.Send(new GetUserCommand
+        {
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
+        
         return Ok(_mapper.Map<UserDto>(user));
     }
 
     [Authorize]
     [HttpPost("update")]
-    public async Task<IActionResult> UpdateUserAsync([FromBody] ProfileDto profile)
+    public async Task<IActionResult> UpdateUserAsync([FromBody] Profile profile)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        
-        user.Profile = _mapper.Map(profile, user.Profile);
-        var success = await _userRepository.UpdateProfileAsync(user);
+        var success = await _mediator.Send(new UpdateUserProfileCommand
+        {
+            NameIdentifier = HttpContext.GetNameIdentifier(),
+            Profile = profile
+        });
 
         if (success.IsFailed)
         {
@@ -57,17 +55,15 @@ public class UserController : ControllerBase
     [HttpGet("friends")]
     public async Task<IActionResult> GetFriendsAsync()
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var userClans = _context.Clans
-            .Where(clan => clan.Members.Any(member => member.UserId == user.Id));
-
-        var friends = await userClans
-            .SelectMany(clan => clan.Members)
-            .Where(member => member.UserId != user.Id)
-            .Select(member => member.User)
-            .Distinct()
-            .ToListAsync();
+        var friends = await _mediator.Send(new GetFriendsQuery
+        {
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
+        if (friends.IsFailed)
+        {
+            return BadRequest(friends.Errors);
+        }
         
-        return Ok(_mapper.Map<IEnumerable<UserDto>>(friends));
+        return Ok(_mapper.Map<IEnumerable<UserDto>>(friends.Value));
     }
 }

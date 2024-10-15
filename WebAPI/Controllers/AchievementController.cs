@@ -1,9 +1,8 @@
-using Application.Services;
+using Application.Achievements.Queries;
 using Domain.Entities;
-using Infrastructure;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Controllers;
 
@@ -11,21 +10,24 @@ namespace WebAPI.Controllers;
 [Route("v1/achievements")]
 public class AchievementController : ControllerBase
 {
-    private readonly UserService _userService;
-    private readonly GGDbContext _context;
+    private readonly IMediator _mediator;
 
-    public AchievementController(UserService userService, GGDbContext context)
+    public AchievementController(IMediator mediator)
     {
-        _userService = userService;
-        _context = context;
+        _mediator = mediator;
     }
 
     [Authorize]
     [HttpGet("get")]
     public async Task<ActionResult<IEnumerable<Achievement>>> GetAchievements()
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var userWithAchievements = await _context.Users.Include(u => u.Achievements).FirstAsync(u => u.Id == user.Id);
-        return Ok(userWithAchievements.Achievements);
+        var achievements = await _mediator.Send(new GetAchievementsQuery
+        {
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
+        
+        return achievements.IsFailed ? 
+            BadRequest(achievements) : 
+            Ok(achievements.Value);
     }
 }

@@ -22,7 +22,7 @@ public class GameController: ControllerBase
     [EnableCors("dev")]
     public async Task<IActionResult> GetGames([FromQuery]string query)
     {
-        var games = await _sender.Send(new GameSearchRequest
+        var games = await _sender.Send(new GetGamesQuery
         {
             Query = query
         });

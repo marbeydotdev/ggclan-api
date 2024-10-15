@@ -74,7 +74,7 @@ var app = builder.Build();
 
 // verwijder en maak database schema, voor dev
 var scope = app.Services.CreateScope();
-var db = scope.ServiceProvider.GetRequiredService<GGDbContext>();
+var db = scope.ServiceProvider.GetRequiredService<GgDbContext>();
 
 
 // Configure the HTTP request pipeline.

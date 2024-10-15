@@ -1,84 +1,39 @@
 using Domain.Entities;
+using Domain.Enums;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 
 namespace Infrastructure.Repositories;
 
-public class UserRepository
+public class UserRepository : GenericRepository<User>
 {
-    private readonly GGDbContext _context;
-    public UserRepository(GGDbContext context)
+    public UserRepository(GgDbContext context) : base(context)
     {
-        _context = context;
     }
 
-    public async Task<Result<User>> AddAsync(User user)
+    public new async Task<Result<User>> AddAsync(User user, bool returnEntities = false)
     {
         if (await UserExists(user.NameIdentifier))
         {
-            return Result.Fail("Username is taken.");
+            return Result.Fail("User exists.");
         }
         
-        var add = await _context.Users.AddAsync(user);
+        var add = await Context.Users.AddAsync(user);
         
-        await _context.SaveChangesAsync();
-        
-        return Result.Ok(add.Entity);
+        await Context.SaveChangesAsync();
+
+        return returnEntities ? Result.Ok(add.Entity) : Result.Ok();
     }
 
     public async Task<Result<User>> GetAsync(string nameIdentifier)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(user => user.NameIdentifier == nameIdentifier);
-        if (user == null)
-        {
-            return Result.Fail<User>("User not found");
-        }
-
-        return Result.Ok(user);
-    }
-    
-    public async Task<Result<User>> GetAsync(int userId)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(user => user.Id == userId);
-        if (user == null)
-        {
-            return Result.Fail<User>("User not found");
-        }
-
-        return Result.Ok(user);
+        var user = await GetAsync(u => u.NameIdentifier == nameIdentifier);
+        return user;
     }
 
-    public async Task<Result> UpdateProfileAsync(User user)
+    private async Task<bool> UserExists(string nameIdentifier)
     {
-        if (!await UserExists(user.NameIdentifier))
-        {
-            return Result.Fail("User does not exist.");
-        }
-        
-        _context.Users.Update(user);
-        
-        await _context.SaveChangesAsync();
-
-        return Result.Ok();
-    }
-
-    public async Task<Result> DeleteAsync(User user)
-    {
-        if (!await UserExists(user.NameIdentifier))
-        {
-            return Result.Fail("User does not exist.");
-        }
-        
-        _context.Users.Remove(user);
-        
-        await _context.SaveChangesAsync();
-
-        return Result.Ok();
-    }
-
-    private async Task<bool> UserExists(string userIdentifier)
-    {
-        return await _context.Users.AnyAsync(u => u.NameIdentifier == userIdentifier);
+        return await AnyAsync(u => u.NameIdentifier == nameIdentifier);
     }
 }
