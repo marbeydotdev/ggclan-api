@@ -10,11 +10,11 @@ namespace WebAPI.Controllers;
 
 public class GameController: ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public GameController(ISender sender)
+    public GameController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     
@@ -22,7 +22,7 @@ public class GameController: ControllerBase
     [EnableCors("dev")]
     public async Task<IActionResult> GetGames([FromQuery]string query)
     {
-        var games = await _sender.Send(new GetGamesQuery
+        var games = await _mediator.Send(new GetGamesQuery
         {
             Query = query
         });

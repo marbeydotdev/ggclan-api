@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class GenericRepository<T> where T : BaseEntity {
+public class GenericRepository<T>: IGenericRepository<T> where T : BaseEntity {
     protected readonly GgDbContext Context;
     
     private const int MaxLimit = 50;

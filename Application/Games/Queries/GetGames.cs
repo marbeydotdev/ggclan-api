@@ -12,18 +12,18 @@ public class GetGamesQuery: IRequest<List<GameSearchListingDto>>
 
 public class GetGamesQueryHandler : IRequestHandler<GetGamesQuery, List<GameSearchListingDto>>
 {
-    private readonly GameCacheService _gameCacheService;
+    private readonly IGameCacheService _localGameCacheService;
 
-    public GetGamesQueryHandler(GameCacheService gameCacheService)
+    public GetGamesQueryHandler(IGameCacheService localGameCacheService)
     {
-        _gameCacheService = gameCacheService;
+        _localGameCacheService = localGameCacheService;
     }
 
     public async Task<List<GameSearchListingDto>> Handle(GetGamesQuery request, CancellationToken cancellationToken)
     {
         var steamGrid = new SteamGridDb("d4797e6e1502c29aace2e94aed09f51f");
 
-        var cache = _gameCacheService.TryHitCacheAsync(request.Query);
+        var cache = _localGameCacheService.TryHitCacheAsync(request.Query);
         
         if (cache != null)
         {
@@ -49,7 +49,7 @@ public class GetGamesQueryHandler : IRequestHandler<GetGamesQuery, List<GameSear
             results.Add(game);
         }
 
-        _gameCacheService.TryAddCacheAsync(request.Query, results);
+        _localGameCacheService.TryAddCacheAsync(request.Query, results);
 
         return results;
     }

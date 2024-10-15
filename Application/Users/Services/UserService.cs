@@ -1,16 +1,16 @@
-using Application.Services;
+using Application.Achievements.Services;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Repositories;
 
 namespace Application.Users.Services;
 
-public class UserService
+public class UserService : IUserService
 {
-    private readonly UserRepository _userRepository;
-    private readonly AchievementService _achievementService;
+    private readonly IUserRepository _userRepository;
+    private readonly IAchievementService _achievementService;
 
-    public UserService(UserRepository userRepository, AchievementService achievementService)
+    public UserService(IUserRepository userRepository, IAchievementService achievementService)
     {
         _userRepository = userRepository;
         _achievementService = achievementService;
@@ -18,7 +18,7 @@ public class UserService
 
     public async Task<User> GetOrCreateUser(string nameIdentifier)
     {
-        var getUser = await _userRepository.GetAsync(nameIdentifier);
+        var getUser = await _userRepository.GetAsync(u => u.NameIdentifier == nameIdentifier);
 
         if (getUser.IsFailed)
         {
@@ -39,6 +39,6 @@ public class UserService
 
         var newUser = await _userRepository.AddAsync(user, true);
 
-        return newUser.Value;
+        return newUser.Value!;
     }
 }

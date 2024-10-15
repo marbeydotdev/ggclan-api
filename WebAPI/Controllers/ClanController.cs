@@ -6,7 +6,6 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
-using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,19 +20,17 @@ public class ClanController : ControllerBase
 {
     private readonly IMapper _mapper;
     private readonly GgDbContext _context;
-    private readonly UserService _userService;
-    private readonly ClanService _clanService;
+    private readonly IUserService _userService;
+    private readonly IClanService _clanService;
     private readonly IMediator _mediator;
-    private readonly ClanRepository _clanRepository;
 
-    public ClanController(IMapper mapper, GgDbContext context, UserService userService, ClanService clanService, IMediator mediator, ClanRepository clanRepository)
+    public ClanController(IMapper mapper, GgDbContext context, IUserService userService, IClanService clanService, IMediator mediator)
     {
         _mapper = mapper;
         _context = context;
         _userService = userService;
         _clanService = clanService;
         _mediator = mediator;
-        _clanRepository = clanRepository;
     }
 
     [Authorize]
@@ -131,7 +128,7 @@ public class ClanController : ControllerBase
     public async Task<IActionResult> GetInvites(int id)
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var clan = await _clanService.TryGetClan(id, user.Id);
+        var clan = await _clanService.GetClan(id, user.Id);
         if (clan.IsFailed)
         {
             return BadRequest(clan.Errors);
@@ -157,7 +154,7 @@ public class ClanController : ControllerBase
         {
             return BadRequest("Invite not found.");
         }
-        var clan  = await _clanService.TryGetClan(invite.ClanId, user.Id);
+        var clan  = await _clanService.GetClan(invite.ClanId, user.Id);
 
         if (clan.IsFailed)
         {
@@ -193,7 +190,7 @@ public class ClanController : ControllerBase
         {
             return BadRequest("Invite not found.");
         }
-        var clan  = await _clanService.TryGetClan(invite.ClanId, user.Id);
+        var clan  = await _clanService.GetClan(invite.ClanId, user.Id);
 
         if (clan.IsFailed)
         {
@@ -204,7 +201,6 @@ public class ClanController : ControllerBase
         {
             return BadRequest("You are not allowed to accept or deny invites.");
         }
-        ;
         _context.ClanInvites.Remove(invite);
         
         await _context.SaveChangesAsync();

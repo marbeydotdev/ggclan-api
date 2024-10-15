@@ -1,4 +1,3 @@
-using Application.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
@@ -14,15 +13,15 @@ public class GetAchievementsQuery : IRequest<Result<List<Achievement>>>
 
 public class GetAchievementsQueryHandler : IRequestHandler<GetAchievementsQuery, Result<List<Achievement>>>
 {
-    private readonly UserService _userService;
-    private readonly UserRepository _userRepository;
-    private readonly UserAchievementRepository _userAchievementRepository;
+    private readonly IUserService _userService;
+    private readonly IUserRepository _userRepository;
+    private readonly IUserAchievementRepository _userAchievementRepository;
 
-    public GetAchievementsQueryHandler(UserService userService, UserRepository userRepository, UserAchievementRepository userAchievementRepository)
+    public GetAchievementsQueryHandler(IUserService userService, IUserAchievementRepository userAchievementRepository, IUserRepository userRepository)
     {
         _userService = userService;
-        _userRepository = userRepository;
         _userAchievementRepository = userAchievementRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<Result<List<Achievement>>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken)

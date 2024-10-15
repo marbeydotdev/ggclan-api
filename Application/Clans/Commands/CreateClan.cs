@@ -1,4 +1,4 @@
-using Application.Services;
+using Application.Achievements.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using Domain.Enums;
@@ -17,11 +17,11 @@ public class CreateClanCommand : IRequest<Result<Clan>>
 
 public class CreateClanCommandHandler : IRequestHandler<CreateClanCommand, Result<Clan>>
 {
-    private readonly UserService _userService;
-    private readonly ClanRepository _clanRepository;
-    private readonly AchievementService _achievementService;
+    private readonly IUserService _userService;
+    private readonly IClanRepository _clanRepository;
+    private readonly IAchievementService _achievementService;
 
-    public CreateClanCommandHandler(UserService userService, ClanRepository clanRepository, IMediator mediator, AchievementService achievementService)
+    public CreateClanCommandHandler(IUserService userService, IClanRepository clanRepository, IAchievementService achievementService)
     {
         _userService = userService;
         _clanRepository = clanRepository;

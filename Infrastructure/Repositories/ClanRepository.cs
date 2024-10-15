@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class ClanRepository : GenericRepository<Clan>
+public class ClanRepository : GenericRepository<Clan>, IClanRepository
 {
     public ClanRepository(GgDbContext context) : base(context)
     {

@@ -1,5 +1,4 @@
 using Application.Clans.Services;
-using Application.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
@@ -16,11 +15,11 @@ public class GetClanQuery : IRequest<Result<Clan>>
 
 public class GetClanQueryHandler : IRequestHandler<GetClanQuery, Result<Clan>>
 {
-    private readonly ClanService _clanService;
-    private readonly UserService _userService;
-    private readonly ClanRepository _clanRepository;
+    private readonly IClanService _clanService;
+    private readonly IUserService _userService;
+    private readonly IClanRepository _clanRepository;
 
-    public GetClanQueryHandler(ClanService clanService, UserService userService, ClanRepository clanRepository)
+    public GetClanQueryHandler(IClanService clanService, IUserService userService, IClanRepository clanRepository)
     {
         _clanService = clanService;
         _userService = userService;
@@ -34,7 +33,7 @@ public class GetClanQueryHandler : IRequestHandler<GetClanQuery, Result<Clan>>
         if (request.NameIdentifier != null)
         {
             var user = await _userService.GetOrCreateUser(request.NameIdentifier);
-            query = await _clanService.TryGetClan(request.ClanId, user.Id);
+            query = await _clanService.GetClan(request.ClanId, user.Id);
         }
         else
         {

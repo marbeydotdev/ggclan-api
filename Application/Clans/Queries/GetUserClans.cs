@@ -1,4 +1,3 @@
-using Application.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
@@ -17,13 +16,13 @@ public class GetUserClansQuery : IRequest<Result<List<Clan>>>
 
 public class GetUserClansQueryHandler : IRequestHandler<GetUserClansQuery, Result<List<Clan>>>
 {
-    private readonly GenericRepository<Clan> _clans;
-    private readonly UserService _userService;
+    private readonly IClanRepository _clans;
+    private readonly IUserService _userService;
 
-    public GetUserClansQueryHandler(UserService userService, GenericRepository<Clan> clans)
+    public GetUserClansQueryHandler(IClanRepository clans, IUserService userService)
     {
-        _userService = userService;
         _clans = clans;
+        _userService = userService;
     }
 
     public async Task<Result<List<Clan>>> Handle(GetUserClansQuery request, CancellationToken cancellationToken)

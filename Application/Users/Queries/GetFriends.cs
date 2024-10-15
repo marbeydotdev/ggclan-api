@@ -1,4 +1,4 @@
-using Application.Services;
+using Application.Clans.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
@@ -14,13 +14,13 @@ public class GetFriendsQuery : IRequest<Result<List<User>>>
 
 public class GetFriendsQueryHandler : IRequestHandler<GetFriendsQuery, Result<List<User>>>
 {
-    private readonly UserService _userService;
-    private readonly GenericRepository<Clan> _clans;
+    private readonly IUserService _userService;
+    private readonly IClanRepository _clans;
 
-    public GetFriendsQueryHandler(UserService userService, GenericRepository<Clan> clans)
+    public GetFriendsQueryHandler(IClanRepository clans, IUserService userService)
     {
-        _userService = userService;
         _clans = clans;
+        _userService = userService;
     }
 
     public async Task<Result<List<User>>> Handle(GetFriendsQuery request, CancellationToken cancellationToken)

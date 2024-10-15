@@ -1,4 +1,3 @@
-using Application.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using MediatR;
@@ -12,9 +11,9 @@ public class GetUserCommand : IRequest<User>
 
 public class GetUserCommandHandler : IRequestHandler<GetUserCommand, User>
 {
-    private readonly UserService _userService;
+    private readonly IUserService _userService;
 
-    public GetUserCommandHandler(UserService userService)
+    public GetUserCommandHandler(IUserService userService)
     {
         _userService = userService;
     }

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class UserAchievementRepository : GenericRepository<UserAchievement>
+public class UserAchievementRepository : GenericRepository<UserAchievement>, IUserAchievementRepository
 {
     public UserAchievementRepository(GgDbContext context) : base(context)
     {

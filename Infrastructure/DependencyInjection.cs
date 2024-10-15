@@ -12,10 +12,10 @@ public static class DependencyInjection
         {
             options.UseSqlite("Data Source=GG.db");
         });
-        services.AddScoped<UserRepository>();
-        services.AddScoped<ClanRepository>();
-        services.AddScoped<ChatMessageRepository>();
-        services.AddScoped<UserAchievementRepository>();
-        services.AddScoped(typeof(GenericRepository<>));
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IClanRepository, ClanRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<IUserAchievementRepository, UserAchievementRepository>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
     }
 }

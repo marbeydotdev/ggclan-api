@@ -6,20 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Clans.Services;
 
-public class ClanService
+public class ClanService : IClanService
 {
-    private readonly GenericRepository<ClanInvite> _clanInviteRepository;
-    private readonly ClanRepository _clanRepository;
-    private readonly ChatMessageRepository _chatMessageRepository;
+    private readonly IGenericRepository<ClanInvite> _clanInviteRepository;
+    private readonly IClanRepository _clanRepository;
+    private readonly IChatMessageRepository _chatMessageRepository;
 
-    public ClanService(ClanRepository clanRepository, ChatMessageRepository chatMessageRepository, GenericRepository<ClanInvite> clanInviteRepository)
+    public ClanService(IChatMessageRepository chatMessageRepository, IClanRepository clanRepository, IGenericRepository<ClanInvite> clanInviteRepository)
     {
-        _clanRepository = clanRepository;
         _chatMessageRepository = chatMessageRepository;
+        _clanRepository = clanRepository;
         _clanInviteRepository = clanInviteRepository;
     }
 
-    public async Task<Result<Clan>> TryGetClan(int clanId, int userId)
+    public async Task<Result<Clan>> GetClan(int clanId, int userId)
     {
         var clan = await _clanRepository
             .GetAsync(c => 

@@ -1,11 +1,6 @@
-using Application.Clans.Services;
-using Application.Services;
-using Application.Users.Services;
+using Application.ClanChat.Commands;
+using Application.ClanChat.Queries;
 using AutoMapper;
-using Domain.Entities;
-using Domain.Enums;
-using Infrastructure;
-using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,32 +14,26 @@ namespace WebAPI.Controllers;
 [EnableRateLimiting("fixed")]
 public class ChatController : ControllerBase
 {
-    private readonly UserService _userService;
-    private readonly ClanService _clanService;
-    private readonly GgDbContext _context;
-    private readonly AchievementService _achievementService;
     private readonly IMediator _mediator;
-    private readonly ClanRepository _clanRepository;
-    
     private readonly IMapper _mapper;
 
-    public ChatController(UserService userService, ClanService clanService, GgDbContext context, IMapper mapper, AchievementService achievementService, IMediator mediator, ClanRepository clanRepository)
+    public ChatController(IMediator mediator, IMapper mapper)
     {
-        _userService = userService;
-        _clanService = clanService;
-        _context = context;
-        _mapper = mapper;
-        _achievementService = achievementService;
         _mediator = mediator;
-        _clanRepository = clanRepository;
+        _mapper = mapper;
     }
 
     [Authorize]
     [HttpGet("messages/{clanId:int}")]
     public async Task<IActionResult> GetMessages(int clanId, int skip = 0, int limit = 10)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var messages = await _clanService.GetClanMessages(user.Id, clanId, skip, limit);
+        var messages = await _mediator.Send(new GetClanMessagesQuery
+        {
+            ClanId = clanId,
+            Limit = limit,
+            Skip = skip,
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
         
         return messages.IsFailed ? 
             BadRequest(messages.Errors) : 
@@ -55,26 +44,15 @@ public class ChatController : ControllerBase
     [HttpPost("messages/{clanId:int}")]
     public async Task<IActionResult> CreateMessage(int clanId, [FromBody]CreateMessageDto messageDto)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        
-        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, clanId);
-
-        if (clanMember.IsFailed)
+        var sentMessage = await _mediator.Send(new SendMessageCommand
         {
-            return Forbid();
-        }
-
-        var message = new ClanMessage
-        {
+            NameIdentifier = HttpContext.GetNameIdentifier(),
             ClanId = clanId,
-            ClanMemberId = clanMember.Value.Id,
-            Message = messageDto.Message
-        };
+            CreateMessageDto = messageDto
+        });
         
-        var added = await _context.ClanMessages.AddAsync(message);
-        await _achievementService.AddAchievementIfNotExists(user.Id, (int)EAchievements.FirstMessage);
-        
-        await _context.SaveChangesAsync();
-        return Ok(_mapper.Map<ClanMessageDto>(added.Entity));
+        return sentMessage.IsFailed ? 
+            BadRequest(sentMessage.Errors) : 
+            Ok(_mapper.Map<ClanMessageDto>(sentMessage.Value));
     }
 }

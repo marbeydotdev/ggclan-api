@@ -1,16 +1,14 @@
 using Domain.Entities;
 using FluentResults;
-using Infrastructure;
 using Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
 
-namespace Application.Services;
+namespace Application.Achievements.Services;
 
-public class AchievementService
+public class AchievementService : IAchievementService
 {
-    private readonly GenericRepository<UserAchievement> _userAchievementRepository;
+    private readonly IUserAchievementRepository _userAchievementRepository;
 
-    public AchievementService(GenericRepository<UserAchievement> userAchievementRepository)
+    public AchievementService(IUserAchievementRepository userAchievementRepository)
     {
         _userAchievementRepository = userAchievementRepository;
     }

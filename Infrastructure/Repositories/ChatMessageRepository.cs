@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class ChatMessageRepository : GenericRepository<ClanMessage>
+public class ChatMessageRepository : GenericRepository<ClanMessage>, IChatMessageRepository
 {
     public ChatMessageRepository(GgDbContext dbContext) : base(dbContext)
     {

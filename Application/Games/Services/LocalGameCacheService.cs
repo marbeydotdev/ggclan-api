@@ -8,7 +8,7 @@ public class GameSearchCacheResult
     public List<GameSearchListingDto> Results { get; set; } = null!;
 }
 
-public class GameCacheService
+public class LocalGameCacheService : IGameCacheService
 {
     private List<GameSearchCacheResult> _results = [];
 

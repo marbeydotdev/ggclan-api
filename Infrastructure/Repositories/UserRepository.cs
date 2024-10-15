@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Query;
 
 namespace Infrastructure.Repositories;
 
-public class UserRepository : GenericRepository<User>
+public class UserRepository : GenericRepository<User>, IUserRepository
 {
     public UserRepository(GgDbContext context) : base(context)
     {
     }
 
-    public new async Task<Result<User>> AddAsync(User user, bool returnEntities = false)
+    public new async Task<Result<User?>> AddAsync(User user, bool returnEntities = false)
     {
         if (await UserExists(user.NameIdentifier))
         {
@@ -23,7 +23,7 @@ public class UserRepository : GenericRepository<User>
         
         await Context.SaveChangesAsync();
 
-        return returnEntities ? Result.Ok(add.Entity) : Result.Ok();
+        return returnEntities ? Result.Ok(add?.Entity) : Result.Ok();
     }
 
     public async Task<Result<User>> GetAsync(string nameIdentifier)

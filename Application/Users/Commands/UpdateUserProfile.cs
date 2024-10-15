@@ -1,4 +1,3 @@
-using Application.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
@@ -15,13 +14,13 @@ public class UpdateUserProfileCommand : IRequest<Result>
 
 public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfileCommand, Result>
 {
-    private readonly UserService _userService;
-    private readonly GenericRepository<User> _users;
+    private readonly IUserService _userService;
+    private readonly IUserRepository _users;
 
-    public UpdateUserProfileCommandHandler(UserService userService, GenericRepository<User> users)
+    public UpdateUserProfileCommandHandler(IUserRepository users, IUserService userService)
     {
-        _userService = userService;
         _users = users;
+        _userService = userService;
     }
 
     public async Task<Result> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
