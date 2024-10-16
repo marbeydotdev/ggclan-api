@@ -1,6 +1,4 @@
-using Domain.Entities;
-
-namespace WebAPI.DTO;
+namespace Application.DTO;
 
 public class ClanInviteDto
 {

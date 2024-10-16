@@ -1,8 +1,6 @@
 using Domain.Entities;
-using Domain.Enums;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace Infrastructure.Repositories;
 
@@ -30,6 +28,12 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         var user = await GetAsync(u => u.NameIdentifier == nameIdentifier);
         return user;
+    }
+
+    public async Task<Result<List<User>>> GetFriends(int userId)
+    {
+        var friends = await Context.Friends(userId).ToListAsync();
+        return friends;
     }
 
     private async Task<bool> UserExists(string nameIdentifier)

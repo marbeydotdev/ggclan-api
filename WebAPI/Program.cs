@@ -16,7 +16,7 @@ var domain = builder.Configuration["Auth0:Domain"];
 
 var corsPolicy = "dev";
 
-builder.Services.AddRateLimiter(_ => _
+builder.Services.AddRateLimiter(opts => opts
     .AddFixedWindowLimiter(policyName: "fixed", options =>
     {
         options.PermitLimit = 3;

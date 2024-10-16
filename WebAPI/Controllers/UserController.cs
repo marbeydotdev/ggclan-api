@@ -1,9 +1,10 @@
+using Application.DTO;
 using Application.Users.Commands;
+using Application.Users.Queries;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebAPI.DTO;
 using Profile = Domain.Entities.Profile;
 
 namespace WebAPI.Controllers;

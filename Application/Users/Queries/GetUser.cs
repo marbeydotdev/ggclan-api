@@ -2,7 +2,7 @@ using Application.Users.Services;
 using Domain.Entities;
 using MediatR;
 
-namespace Application.Users.Commands;
+namespace Application.Users.Queries;
 
 public class GetUserCommand : IRequest<User>
 {

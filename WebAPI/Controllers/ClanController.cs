@@ -1,16 +1,17 @@
 using Application.Clans.Commands;
 using Application.Clans.Queries;
 using Application.Clans.Services;
+using Application.DTO;
 using Application.Users.Services;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
+using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebAPI.DTO;
 
 namespace WebAPI.Controllers;
 
@@ -23,22 +24,26 @@ public class ClanController : ControllerBase
     private readonly IUserService _userService;
     private readonly IClanService _clanService;
     private readonly IMediator _mediator;
+    private readonly IClanRepository _clanRepository;
 
-    public ClanController(IMapper mapper, GgDbContext context, IUserService userService, IClanService clanService, IMediator mediator)
+    public ClanController(IMapper mapper, GgDbContext context, IUserService userService, IClanService clanService, IMediator mediator, IClanRepository clanRepository)
     {
         _mapper = mapper;
         _context = context;
         _userService = userService;
         _clanService = clanService;
         _mediator = mediator;
+        _clanRepository = clanRepository;
     }
 
     [Authorize]
-    [HttpGet("list")]
-    public async Task<IActionResult> ListClans(string search = "", int skip = 0, int limit = 10)
+    [HttpGet("browse")]
+    public async Task<IActionResult> BrowseClans(string search = "", int skip = 0, int limit = 10)
     {
         var clans = await _mediator.Send(new GetClansQuery
         {
+            NameIdentifier = HttpContext.GetNameIdentifier(),
+            SearchTerm = search,
             Skip = skip,
             Limit = limit,
         });
@@ -69,7 +74,7 @@ public class ClanController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("list/me")]
+    [HttpGet("browse/me")]
     public async Task<IActionResult> GetParticipatingClans(int skip = 0, int limit = 10)
     {
         var clans = await _mediator.Send(new GetUserClansQuery
@@ -105,7 +110,9 @@ public class ClanController : ControllerBase
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
 
-        if (!await _clanService.UserCanSendInvite(user.Id, id))
+        var canSendInvite = await _clanService.UserCanSendInvite(user.Id, id);
+
+        if (canSendInvite.IsFailed)
         {
             return BadRequest("Cannot join this clan.");
         }
@@ -134,9 +141,11 @@ public class ClanController : ControllerBase
             return BadRequest(clan.Errors);
         }
 
-        if (clan.Value.Members.First(c => c.UserId == user.Id).Role == ClanMemberRole.Member)
+        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, id);
+
+        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
         {
-            return BadRequest("You are not allowed to view invites.");
+            return Forbid();
         }
         
         var invites = await _context.ClanInvites.Include(u => u.User).Where(c => c.ClanId == clan.Value.Id).ToListAsync();
@@ -149,30 +158,22 @@ public class ClanController : ControllerBase
     public async Task<IActionResult> AcceptInvite(int id)
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
+        
         var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
         if (invite == null)
         {
             return BadRequest("Invite not found.");
         }
-        var clan  = await _clanService.GetClan(invite.ClanId, user.Id);
 
-        if (clan.IsFailed)
+        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, invite.ClanId);
+
+        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
         {
-            return BadRequest(clan.Errors);
+            return Forbid("You need to be an administrator to accept this invite.");
         }
 
-        if (clan.Value.Members.First(u => u.UserId == user.Id).Role == ClanMemberRole.Member)
-        {
-            return BadRequest("You are not allowed to accept invites.");
-        }
-        
-        clan.Value.Members.Add(new ClanMember
-        {
-            UserId = invite.UserId,
-            Role = ClanMemberRole.Member
-        });
+        await _clanRepository.AddClanMemberAsync(invite.UserId, invite.ClanId, ClanMemberRole.Member);
 
-        _context.Clans.Update(clan.Value);
         _context.ClanInvites.Remove(invite);
         
         await _context.SaveChangesAsync();
@@ -190,17 +191,14 @@ public class ClanController : ControllerBase
         {
             return BadRequest("Invite not found.");
         }
-        var clan  = await _clanService.GetClan(invite.ClanId, user.Id);
 
-        if (clan.IsFailed)
-        {
-            return BadRequest(clan.Errors);
-        }
+        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, invite.ClanId);
 
-        if (clan.Value.Members.First(u => u.UserId == user.Id).Role == ClanMemberRole.Member)
+        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
         {
-            return BadRequest("You are not allowed to accept or deny invites.");
+            return Forbid();
         }
+        
         _context.ClanInvites.Remove(invite);
         
         await _context.SaveChangesAsync();

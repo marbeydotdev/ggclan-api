@@ -1,13 +1,16 @@
-using Domain.Entities;
+using System.ComponentModel.DataAnnotations;
+using Domain.Common;
 
-namespace WebAPI.DTO;
+namespace Application.DTO;
 
-public class ClanDto
+public class ClanDto : BaseEntity
 {
-    public int Id { get; set; }
+    [Required]
     public string Name { get; set; } = null!;
+    [Required]
     public string Description { get; set; } = null!;
+    [Required]
     public string Game { get; set; } = null!;
+    [Required]
     public bool Private { get; set; } = false; // if true, won't show up in the clan browser
-    public List<ClanMemberDto> Members { get; set; } = [];
 }

@@ -1,11 +1,10 @@
-using Application.Clans.Services;
 using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
 using Infrastructure.Repositories;
 using MediatR;
 
-namespace Application.Users.Commands;
+namespace Application.Users.Queries;
 
 public class GetFriendsQuery : IRequest<Result<List<User>>>
 {
@@ -15,33 +14,18 @@ public class GetFriendsQuery : IRequest<Result<List<User>>>
 public class GetFriendsQueryHandler : IRequestHandler<GetFriendsQuery, Result<List<User>>>
 {
     private readonly IUserService _userService;
-    private readonly IClanRepository _clans;
+    private readonly IUserRepository _userRepository;
 
-    public GetFriendsQueryHandler(IClanRepository clans, IUserService userService)
+    public GetFriendsQueryHandler(IUserService userService, IUserRepository userRepository)
     {
-        _clans = clans;
         _userService = userService;
+        _userRepository = userRepository;
     }
 
     public async Task<Result<List<User>>> Handle(GetFriendsQuery request, CancellationToken cancellationToken)
     {
         var user = await _userService.GetOrCreateUser(request.NameIdentifier);
-        
-        var clans = await _clans
-            .GetAllAsync(clan => clan.Members
-                .Any(member => member.UserId == user.Id));
-
-        if (clans.IsFailed)
-        {
-            return Result.Fail(clans.Errors);
-        }
-
-        var friends = clans.Value
-            .SelectMany(clan => clan.Members)
-            .Where(member => member.UserId != user.Id)
-            .Select(member => member.User)
-            .Distinct().ToList();
-        
-        return Result.Ok(friends);
+        var friends = await _userRepository.GetFriends(user.Id);
+        return friends;
     }
 }

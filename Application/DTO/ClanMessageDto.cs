@@ -1,9 +1,9 @@
-namespace WebAPI.DTO;
+using Domain.Common;
 
-public class ClanMessageDto
+namespace Application.DTO;
+
+public class ClanMessageDto : BaseEntity
 {
-    public int Id { get; set; }
     public string Message { get; set; } = null!;
-    public DateTime Created { get; set; }
     public ClanMemberDto ClanMember { get; set; } = null!;
 }

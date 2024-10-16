@@ -1,8 +1,8 @@
-namespace WebAPI.DTO;
+using Domain.Common;
 
-public class UserDto
+namespace Application.DTO;
+
+public class UserDto : BaseEntity
 {
-    public int Id { get; set; }
-    public DateTime Created { get; set; }
     public ProfileDto Profile { get; set; } = null!;
 }

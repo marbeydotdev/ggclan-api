@@ -1,11 +1,11 @@
 using Application.ClanChat.Commands;
 using Application.ClanChat.Queries;
+using Application.DTO;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using WebAPI.DTO;
 
 namespace WebAPI.Controllers;
 

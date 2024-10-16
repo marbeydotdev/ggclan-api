@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace WebAPI.DTO;
+namespace Application.DTO;
 
 public class ClanMemberDto
 {

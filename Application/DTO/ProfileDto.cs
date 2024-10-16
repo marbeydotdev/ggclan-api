@@ -1,4 +1,4 @@
-namespace WebAPI.DTO;
+namespace Application.DTO;
 
 public class ProfileDto
 {

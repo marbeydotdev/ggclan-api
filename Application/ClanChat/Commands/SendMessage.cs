@@ -1,11 +1,11 @@
 using Application.Achievements.Services;
+using Application.DTO;
 using Application.Users.Services;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
 using Infrastructure.Repositories;
 using MediatR;
-using WebAPI.DTO;
 
 namespace Application.ClanChat.Commands;
 

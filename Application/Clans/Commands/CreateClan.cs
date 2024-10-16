@@ -1,11 +1,11 @@
 using Application.Achievements.Services;
+using Application.DTO;
 using Application.Users.Services;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
 using Infrastructure.Repositories;
 using MediatR;
-using WebAPI.DTO;
 
 namespace Application.Clans.Commands;
 
@@ -37,18 +37,11 @@ public class CreateClanCommandHandler : IRequestHandler<CreateClanCommand, Resul
             Name = request.CreateClanDto.Name,
             Description = request.CreateClanDto.Description,
             Game = request.CreateClanDto.Game,
-            Members =
-            [
-                new ClanMember
-                {
-                    Role = ClanMemberRole.Owner,
-                    UserId = user.Id
-                }
-            ],
-            Invites = []
         };
         
         var result = await _clanRepository.AddAsync(newClan, true);
+        
+        await _clanRepository.AddClanMemberAsync(user.Id, newClan.Id, ClanMemberRole.Owner);
         await _achievementService.AddAchievementIfNotExists(user.Id, (int)EAchievements.ClanCreated);
         
         return result as Result<Clan>; // returnEntity = true, so not null

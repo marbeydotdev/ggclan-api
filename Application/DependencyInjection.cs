@@ -3,7 +3,6 @@ using Application.Achievements.Services;
 using Application.Clans.Services;
 using Application.Games.Services;
 using Application.Users.Services;
-using Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application;

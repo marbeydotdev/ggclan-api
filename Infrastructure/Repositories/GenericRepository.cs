@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Domain.Common;
 using FluentResults;
@@ -19,11 +18,9 @@ public class GenericRepository<T>: IGenericRepository<T> where T : BaseEntity {
     public async Task<Result<T>> GetAsync(Expression<Func<T, bool>> predicate)
     {
         var result = await Context.Set<T>().FirstOrDefaultAsync(predicate);
-        if (result is null)
-        {
-            return Result.Fail($"The {typeof(T)} was not found.");
-        }
-        return Result.Ok(result);
+        return result is null ? 
+            Result.Fail($"The {typeof(T)} was not found.") : 
+            Result.Ok(result);
     }
 
     public async Task<Result<List<T>>> GetAllAsync(Expression<Func<T, bool>> predicate, int skip = 0, int limit = 10, Expression<Func<T, object>>? orderBy = null, bool ascending = true)
@@ -71,10 +68,8 @@ public class GenericRepository<T>: IGenericRepository<T> where T : BaseEntity {
     {
         limit = Math.Clamp(limit, 1, MaxLimit);
         skip = skip < 0 ? 0 : skip;
-        
-        IQueryable<T> query;
 
-        query = orderBy == null ? 
+        var query = orderBy == null ? 
             Context.Set<T>().Where(predicate).Skip(skip).Take(limit) :
             ascending ? 
                 Context.Set<T>().Where(predicate).OrderBy(orderBy).Skip(skip).Take(limit) :

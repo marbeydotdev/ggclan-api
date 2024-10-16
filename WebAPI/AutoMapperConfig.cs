@@ -1,5 +1,5 @@
+using Application.DTO;
 using Domain.Entities;
-using WebAPI.DTO;
 using Profile = AutoMapper.Profile;
 
 namespace WebAPI;
