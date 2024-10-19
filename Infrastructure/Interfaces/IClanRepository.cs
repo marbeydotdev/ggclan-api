@@ -3,7 +3,7 @@ using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Interfaces;
 
 public interface IClanRepository : IGenericRepository<Clan>
 {

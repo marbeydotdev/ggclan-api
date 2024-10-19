@@ -7,6 +7,7 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

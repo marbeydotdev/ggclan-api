@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using FluentResults;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Interfaces;
 
 public interface IGenericRepository<T>
 {

@@ -4,6 +4,7 @@ using Application.Users.Services;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using MediatR;
 

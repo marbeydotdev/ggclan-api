@@ -1,6 +1,7 @@
 using Application.Achievements.Services;
 using Domain.Entities;
 using Domain.Enums;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 
 namespace Application.Users.Services;

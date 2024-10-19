@@ -1,6 +1,7 @@
 using Application.DTO;
 using Application.Users.Services;
 using AutoMapper;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

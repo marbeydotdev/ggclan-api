@@ -1,7 +1,7 @@
 using Domain.Entities;
 using FluentResults;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Interfaces;
 
 public interface IUserRepository : IGenericRepository<User>
 {

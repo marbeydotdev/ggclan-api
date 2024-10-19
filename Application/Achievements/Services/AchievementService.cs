@@ -1,5 +1,6 @@
 using Domain.Entities;
 using FluentResults;
+using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 
 namespace Application.Achievements.Services;

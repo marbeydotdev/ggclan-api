@@ -1,6 +1,6 @@
 using Domain.Entities;
 
-namespace Infrastructure.Repositories;
+namespace Infrastructure.Interfaces;
 
 public interface IChatMessageRepository : IGenericRepository<ClanMessage>
 {

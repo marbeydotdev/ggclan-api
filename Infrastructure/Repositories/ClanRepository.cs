@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
+using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;

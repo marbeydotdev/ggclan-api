@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Domain.Common;
 using FluentResults;
+using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
