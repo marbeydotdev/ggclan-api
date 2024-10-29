@@ -1,7 +1,7 @@
 ﻿# Stage 1: Base Runtime Image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 8080  # Pas aan indien slechts één poort nodig is
+EXPOSE 8080
 
 # Stage 2: Build & Restore
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
