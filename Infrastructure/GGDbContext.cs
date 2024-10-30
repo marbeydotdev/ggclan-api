@@ -46,7 +46,10 @@ public class GgDbContext : DbContext
         from c in Clans
         where !(from m in ClanMembers
             where m.UserId == userId
-            select m.ClanId).Contains(c.Id) && !c.Private
+            select m.ClanId).Contains(c.Id) && !c.Private && 
+              !(from i in ClanInvites
+                where i.UserId == userId
+                select i.ClanId).Contains(c.Id)
         select c;
     
     public DbSet<User> Users { get; set; }
