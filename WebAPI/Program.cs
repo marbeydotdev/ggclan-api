@@ -19,8 +19,8 @@ var corsPolicy = "dev";
 builder.Services.AddRateLimiter(opts => opts
     .AddFixedWindowLimiter(policyName: "fixed", options =>
     {
-        options.PermitLimit = 3;
-        options.Window = TimeSpan.FromSeconds(5);
+        options.PermitLimit = 20;
+        options.Window = TimeSpan.FromSeconds(10);
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 2;
     }));
@@ -85,15 +85,10 @@ if (app.Environment.IsDevelopment())
 }
 
 db.Database.EnsureCreated();
-
+app.UseRateLimiter();
 app.UseHttpsRedirection();
-
 app.UseCors(corsPolicy);
-
 app.UseAuthorization();
-
 app.MapHub<ChatHub>("/v1/chat");
-
 app.MapControllers();
-
 app.Run();
