@@ -39,8 +39,6 @@ public class ClanService : IClanService
             return Result.Fail("Access denied.");
         }
         
-        Console.WriteLine(afterId);
-        
         Result<List<ClanMessage>> messages;
 
         if (afterId.HasValue)

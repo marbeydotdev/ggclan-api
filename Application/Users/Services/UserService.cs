@@ -10,6 +10,8 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IAchievementService _achievementService;
+    
+    private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
     public UserService(IUserRepository userRepository, IAchievementService achievementService)
     {
@@ -19,16 +21,22 @@ public class UserService : IUserService
 
     public async Task<User> GetOrCreateUser(string nameIdentifier)
     {
-        var getUser = await _userRepository.GetAsync(u => u.NameIdentifier == nameIdentifier);
-
-        if (getUser.IsFailed)
+        await _semaphore.WaitAsync();
+        try
         {
+            var getUser = await _userRepository.GetAsync(u => u.NameIdentifier == nameIdentifier);
+
+            if (!getUser.IsFailed) return getUser.Value;
+            
             var newUser = await CreateUser(nameIdentifier);
             await _achievementService.AddAchievementIfNotExists(newUser.Id, (int)EAchievements.NewAccount);
             return newUser;
-        }
 
-        return getUser.Value;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     private async Task<User> CreateUser(string nameIdentifier)

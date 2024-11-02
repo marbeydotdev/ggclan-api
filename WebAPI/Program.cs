@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Application;
+using Domain.Interfaces;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using WebAPI;
 using WebAPI.Controllers;
+using WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             NameClaimType = ClaimTypes.NameIdentifier
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/v1/realtime")))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services
@@ -53,7 +72,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: corsPolicy,
         policy  =>
         {
-            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
 });
 
@@ -69,6 +88,8 @@ builder.Services.AddApplication();
 
 builder.Services.AddInfrastructure();
 builder.Services.AddAutoMapper(Assembly.GetEntryAssembly());
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IRealtimeChatService, RealtimeChatService>();
 var app = builder.Build();
 
 // verwijder en maak database schema, voor dev
@@ -89,6 +110,6 @@ app.UseRateLimiter();
 app.UseHttpsRedirection();
 app.UseCors(corsPolicy);
 app.UseAuthorization();
-app.MapHub<ChatHub>("/v1/chat");
+app.MapHub<RealtimeHub>("/v1/realtime");
 app.MapControllers();
 app.Run();

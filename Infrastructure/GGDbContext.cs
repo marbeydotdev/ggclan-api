@@ -20,7 +20,7 @@ public class GgDbContext : DbContext
         modelBuilder.Entity<Achievement>().HasData(
             new Achievement { Id = (int)EAchievements.NewAccount, Name = "Welcome!", Description = "You have created an account." },
             new Achievement { Id = (int)EAchievements.FirstMessage, Name = "Chatter", Description = "You have sent your first message." },
-            new Achievement { Id = (int)EAchievements.ClanCreated, Name = "Founder", Description = "You created your fist clan." },
+            new Achievement { Id = (int)EAchievements.ClanCreated, Name = "Founder", Description = "You created your first clan." },
             new Achievement { Id = (int)EAchievements.ClanJoined, Name = "Member", Description = "You joined your fist clan." }
         );
     }
