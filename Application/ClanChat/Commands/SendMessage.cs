@@ -1,4 +1,5 @@
 using Application.Achievements.Services;
+using Application.ClanChat.Events;
 using Application.DTO;
 using Application.Users.Services;
 using Domain.Entities;
@@ -22,14 +23,14 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Res
     private readonly IUserService _userService;
     private readonly IChatMessageRepository _clanMessageRepository;
     private readonly IClanRepository _clanRepository;
-    private readonly IAchievementService _achievementService;
+    private readonly IMediator _mediator;
 
-    public SendMessageCommandHandler(IUserService userService, IChatMessageRepository clanMessageRepository, IClanRepository clanRepository, IAchievementService achievementService)
+    public SendMessageCommandHandler(IUserService userService, IChatMessageRepository clanMessageRepository, IClanRepository clanRepository, IMediator mediator)
     {
         _userService = userService;
         _clanMessageRepository = clanMessageRepository;
         _clanRepository = clanRepository;
-        _achievementService = achievementService;
+        _mediator = mediator;
     }
 
     public async Task<Result<ClanMessage>> Handle(SendMessageCommand request, CancellationToken cancellationToken)
@@ -49,7 +50,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Res
         };
         
         var added = await _clanMessageRepository.AddAsync(message, true);
-        await _achievementService.AddAchievementIfNotExists(user.Id, (int)EAchievements.FirstMessage);
+        await _mediator.Publish(new NewMessageEvent(added.Value!), cancellationToken);
         return Result.Ok(added.Value!); // returnEntity = true, so not null
     }
 }

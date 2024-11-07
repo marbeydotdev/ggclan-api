@@ -159,27 +159,14 @@ public class ClanController : ControllerBase
     public async Task<IActionResult> AcceptInvite(int id)
     {
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        
-        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
-        if (invite == null)
+
+        var success = await _mediator.Send(new AcceptInviteCommand
         {
-            return BadRequest("Invite not found.");
-        }
+            InviteId = id,
+            UserId = user.Id
+        });
 
-        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, invite.ClanId);
-
-        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
-        {
-            return Forbid("You need to be an administrator to accept this invite.");
-        }
-
-        await _clanRepository.AddClanMemberAsync(invite.UserId, invite.ClanId, ClanMemberRole.Member);
-
-        _context.ClanInvites.Remove(invite);
-        
-        await _context.SaveChangesAsync();
-
-        return Ok();
+        return success.IsFailed ? BadRequest(success.Errors) : Ok();
     }
     
     [Authorize]

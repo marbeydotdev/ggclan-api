@@ -32,16 +32,26 @@ public class ClanService : IClanService
         return clan;
     }
     
-    public async Task<Result<List<ClanMessage>>> GetClanMessages(int userId, int clanId, int skip, int limit)
+    public async Task<Result<List<ClanMessage>>> GetClanMessages(int userId, int clanId, int skip, int limit, int? afterId = null)
     {
         if (!await UserHasAccessToClan(userId, clanId))
         {
             return Result.Fail("Access denied.");
         }
         
-        var messages = await _chatMessageRepository.GetAllAsync(
-            m => m.ClanId == clanId, skip, limit, m => m.Created, false);
+        Result<List<ClanMessage>> messages;
 
+        if (afterId.HasValue)
+        {
+            messages = await _chatMessageRepository.GetAllAsync(
+                m => m.ClanId == clanId && m.Id > afterId, skip, limit, m => m.Created, false);
+        }
+        else
+        {
+            messages = await _chatMessageRepository.GetAllAsync(
+                m => m.ClanId == clanId, skip, limit, m => m.Created, false);
+        }
+        
         return messages;
     }
 

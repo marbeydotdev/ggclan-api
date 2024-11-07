@@ -25,13 +25,14 @@ public class ChatController : ControllerBase
 
     [Authorize]
     [HttpGet("messages/{clanId:int}")]
-    public async Task<IActionResult> GetMessages(int clanId, int skip = 0, int limit = 10)
+    public async Task<IActionResult> GetMessages(int clanId, int skip = 0, int limit = 10, int? afterId = null)
     {
         var messages = await _mediator.Send(new GetClanMessagesQuery
         {
             ClanId = clanId,
             Limit = limit,
             Skip = skip,
+            AfterId = afterId,
             NameIdentifier = HttpContext.GetNameIdentifier()
         });
         

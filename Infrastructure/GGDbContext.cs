@@ -20,7 +20,7 @@ public class GgDbContext : DbContext
         modelBuilder.Entity<Achievement>().HasData(
             new Achievement { Id = (int)EAchievements.NewAccount, Name = "Welcome!", Description = "You have created an account." },
             new Achievement { Id = (int)EAchievements.FirstMessage, Name = "Chatter", Description = "You have sent your first message." },
-            new Achievement { Id = (int)EAchievements.ClanCreated, Name = "Founder", Description = "You created your fist clan." },
+            new Achievement { Id = (int)EAchievements.ClanCreated, Name = "Founder", Description = "You created your first clan." },
             new Achievement { Id = (int)EAchievements.ClanJoined, Name = "Member", Description = "You joined your fist clan." }
         );
     }
@@ -46,7 +46,10 @@ public class GgDbContext : DbContext
         from c in Clans
         where !(from m in ClanMembers
             where m.UserId == userId
-            select m.ClanId).Contains(c.Id) && !c.Private
+            select m.ClanId).Contains(c.Id) && !c.Private && 
+              !(from i in ClanInvites
+                where i.UserId == userId
+                select i.ClanId).Contains(c.Id)
         select c;
     
     public DbSet<User> Users { get; set; }
