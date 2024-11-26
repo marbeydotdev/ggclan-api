@@ -4,11 +4,9 @@ using Application.Clans.Services;
 using Application.DTO;
 using Application.Users.Services;
 using AutoMapper;
-using Domain.Entities;
 using Domain.Enums;
 using Infrastructure;
 using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +39,11 @@ public class ClanController : ControllerBase
     [HttpGet("browse")]
     public async Task<IActionResult> BrowseClans(string search = "", int skip = 0, int limit = 10)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
         var clans = await _mediator.Send(new GetClansQuery
         {
             NameIdentifier = HttpContext.GetNameIdentifier(),
@@ -78,6 +81,11 @@ public class ClanController : ControllerBase
     [HttpGet("browse/me")]
     public async Task<IActionResult> GetParticipatingClans(int skip = 0, int limit = 10)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
         var clans = await _mediator.Send(new GetUserClansQuery
         {
             NameIdentifier = HttpContext.GetNameIdentifier(),
@@ -94,6 +102,11 @@ public class ClanController : ControllerBase
     [HttpGet("get/{id:int}")]
     public async Task<IActionResult> GetClan(int id)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
         var clan = await _mediator.Send(new GetClanQuery
         {
             ClanId = id,
@@ -109,55 +122,47 @@ public class ClanController : ControllerBase
     [HttpPost("join/{id:int}")]
     public async Task<IActionResult> JoinClan(int id)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-
-        var canSendInvite = await _clanService.UserCanSendInvite(user.Id, id);
-
-        if (canSendInvite.IsFailed)
+        if (!ModelState.IsValid)
         {
-            return BadRequest("Cannot join this clan.");
+            return BadRequest();
         }
 
-        var invite = new ClanInvite
+        var result = await _mediator.Send(new SendInviteCommand
         {
             ClanId = id,
-            User = user
-        };
-        
-        _context.ClanInvites.Add(invite);
-        
-        await _context.SaveChangesAsync();
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
 
-        return Ok();
+        return result.IsSuccess ? Ok() : BadRequest(result.Errors);
     }
 
     [Authorize]
     [HttpGet("get/{id:int}/invites")]
     public async Task<IActionResult> GetInvites(int id)
     {
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var clan = await _clanService.GetClan(id, user.Id);
-        if (clan.IsFailed)
+        if (!ModelState.IsValid)
         {
-            return BadRequest(clan.Errors);
+            return BadRequest();
         }
 
-        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, id);
-
-        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
+        var result = await _mediator.Send(new GetInvitesCommand
         {
-            return Forbid();
-        }
+            NameIdentifier = HttpContext.GetNameIdentifier(),
+            ClanId = id
+        });
         
-        var invites = await _context.ClanInvites.Include(u => u.User).Where(c => c.ClanId == clan.Value.Id).ToListAsync();
-        
-        return Ok(_mapper.Map<IEnumerable<ClanInviteDto>>(invites));
+        return result.IsSuccess ? Ok(_mapper.Map<IEnumerable<ClanInviteDto>>(result.Value)) : BadRequest(result.Errors);
     }
 
     [Authorize]
     [HttpPost("invite/accept/{id:int}")]
     public async Task<IActionResult> AcceptInvite(int id)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
 
         var success = await _mediator.Send(new AcceptInviteCommand
@@ -173,6 +178,11 @@ public class ClanController : ControllerBase
     [HttpPost("invite/deny/{id:int}")]
     public async Task<IActionResult> DenyInvite(int id)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+            
+        }
         var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
         var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
         if (invite == null)
@@ -193,5 +203,4 @@ public class ClanController : ControllerBase
 
         return Ok();
     }
-    
 }

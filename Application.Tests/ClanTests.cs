@@ -35,12 +35,16 @@ public class Tests
     private readonly UserService _userService;
     private readonly ClanRepository _clanRepository;
 
-    [Test]
-    public async Task CreateClanCommandHandler_CreatesClan()
+    [SetUp]
+    public async Task Setup()
     {
         await _context.Database.EnsureDeletedAsync();
         await _context.Database.EnsureCreatedAsync();
-        
+    }
+
+    [Test]
+    public async Task CreateClanCommandHandler_CreatesClan()
+    {
         var handler = new CreateClanCommandHandler(_userService, _clanRepository, _achievementService);
         var command = new CreateClanCommand
         {
@@ -69,4 +73,7 @@ public class Tests
         
         Assert.Fail();
     }
+    
+    [Test]
+    public async Task 
 }
