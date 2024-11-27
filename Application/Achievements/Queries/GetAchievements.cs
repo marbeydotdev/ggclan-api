@@ -2,7 +2,6 @@ using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
 using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
 using MediatR;
 
 namespace Application.Achievements.Queries;
@@ -15,14 +14,12 @@ public class GetAchievementsQuery : IRequest<Result<List<Achievement>>>
 public class GetAchievementsQueryHandler : IRequestHandler<GetAchievementsQuery, Result<List<Achievement>>>
 {
     private readonly IUserService _userService;
-    private readonly IUserRepository _userRepository;
     private readonly IUserAchievementRepository _userAchievementRepository;
 
-    public GetAchievementsQueryHandler(IUserService userService, IUserAchievementRepository userAchievementRepository, IUserRepository userRepository)
+    public GetAchievementsQueryHandler(IUserAchievementRepository userAchievementRepository, IUserService userService)
     {
-        _userService = userService;
         _userAchievementRepository = userAchievementRepository;
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task<Result<List<Achievement>>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken)

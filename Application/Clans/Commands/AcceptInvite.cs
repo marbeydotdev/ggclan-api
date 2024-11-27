@@ -1,4 +1,4 @@
-using System.Windows.Input;
+using Application.Users.Services;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
@@ -8,7 +8,7 @@ using MediatR;
 namespace Application.Clans.Commands;
 
 public class AcceptInviteCommand : IRequest<Result> {
-    public int UserId { get; set; }
+    public string NameIdentifier  { get; set; } = null!;
     public int InviteId { get; set; }
 }
 
@@ -16,22 +16,25 @@ public class AcceptInviteCommandHandler : IRequestHandler<AcceptInviteCommand, R
 {
     private readonly IGenericRepository<ClanInvite> _clanInvites;
     private readonly IClanRepository _clanRepository;
+    private readonly IUserService _userService;
 
-    public AcceptInviteCommandHandler(IGenericRepository<ClanInvite> clanInvites, IClanRepository clanRepository)
+    public AcceptInviteCommandHandler(IGenericRepository<ClanInvite> clanInvites, IClanRepository clanRepository, IUserService userService)
     {
         _clanInvites = clanInvites;
         _clanRepository = clanRepository;
+        _userService = userService;
     }
 
     public async Task<Result> Handle(AcceptInviteCommand request, CancellationToken cancellationToken)
     {
+        var user = await _userService.GetOrCreateUser(request.NameIdentifier);
         var invite = await _clanInvites.GetAsync(i => i.Id == request.InviteId);
         if (invite.IsFailed)
         {
             return Result.Fail("Invite not found.");
         }
 
-        var clanMember = await _clanRepository.GetClanMemberAsync(request.UserId, invite.Value.ClanId);
+        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, invite.Value.ClanId);
 
         if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
         {

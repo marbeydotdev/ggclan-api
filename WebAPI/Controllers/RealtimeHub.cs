@@ -53,7 +53,7 @@ public class RealtimeHub : Hub
     public async Task StopClanChatListen(int clanId)
     {
         var nameIdentifier = GetNameIdentifier(Context);
-        var user = await _userService.GetOrCreateUser(nameIdentifier);
+        await _userService.GetOrCreateUser(nameIdentifier);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"chat/{clanId.ToString()}");
     }
 

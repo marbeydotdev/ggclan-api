@@ -1,40 +1,17 @@
 using Application.Clans.Commands;
 using Application.Clans.Queries;
-using Application.Clans.Services;
 using Application.DTO;
-using Application.Users.Services;
 using AutoMapper;
-using Domain.Enums;
-using Infrastructure;
-using Infrastructure.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Controllers;
 
 [ApiController]
 [Route("v1/clan")]
-public class ClanController : ControllerBase
+public class ClanController(IMapper mapper, IMediator mediator) : ControllerBase
 {
-    private readonly IMapper _mapper;
-    private readonly GgDbContext _context;
-    private readonly IUserService _userService;
-    private readonly IClanService _clanService;
-    private readonly IMediator _mediator;
-    private readonly IClanRepository _clanRepository;
-
-    public ClanController(IMapper mapper, GgDbContext context, IUserService userService, IClanService clanService, IMediator mediator, IClanRepository clanRepository)
-    {
-        _mapper = mapper;
-        _context = context;
-        _userService = userService;
-        _clanService = clanService;
-        _mediator = mediator;
-        _clanRepository = clanRepository;
-    }
-
     [Authorize]
     [HttpGet("browse")]
     public async Task<IActionResult> BrowseClans(string search = "", int skip = 0, int limit = 10)
@@ -44,7 +21,7 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
         
-        var clans = await _mediator.Send(new GetClansQuery
+        var clans = await mediator.Send(new GetClansQuery
         {
             NameIdentifier = HttpContext.GetNameIdentifier(),
             SearchTerm = search,
@@ -54,7 +31,7 @@ public class ClanController : ControllerBase
         
         return clans.IsFailed ? 
             BadRequest(clans.Errors) : 
-            Ok(_mapper.Map<IEnumerable<ClanDto>>(clans.Value));
+            Ok(mapper.Map<IEnumerable<ClanDto>>(clans.Value));
     }
 
     [Authorize]
@@ -66,7 +43,7 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
 
-        var newClan = await _mediator.Send(new CreateClanCommand
+        var newClan = await mediator.Send(new CreateClanCommand
         {
             CreateClanDto = clan,
             NameIdentifier = HttpContext.GetNameIdentifier()
@@ -74,7 +51,7 @@ public class ClanController : ControllerBase
         
         return newClan.IsFailed ? 
             BadRequest(newClan.Errors) : 
-            Ok(_mapper.Map<ClanDto>(newClan.Value));
+            Ok(mapper.Map<ClanDto>(newClan.Value));
     }
 
     [Authorize]
@@ -86,7 +63,7 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
         
-        var clans = await _mediator.Send(new GetUserClansQuery
+        var clans = await mediator.Send(new GetUserClansQuery
         {
             NameIdentifier = HttpContext.GetNameIdentifier(),
             Skip = skip,
@@ -95,7 +72,7 @@ public class ClanController : ControllerBase
         
         return clans.IsFailed ? 
             BadRequest(clans.Errors) : 
-            Ok(_mapper.Map<IEnumerable<ClanDto>>(clans.Value));
+            Ok(mapper.Map<IEnumerable<ClanDto>>(clans.Value));
     }
     
     [Authorize]
@@ -107,7 +84,7 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
         
-        var clan = await _mediator.Send(new GetClanQuery
+        var clan = await mediator.Send(new GetClanQuery
         {
             ClanId = id,
             NameIdentifier = HttpContext.GetNameIdentifier()
@@ -115,7 +92,7 @@ public class ClanController : ControllerBase
 
         return clan.IsFailed ? 
             BadRequest(clan.Errors) : 
-            Ok(_mapper.Map<ClanDto>(clan.Value));
+            Ok(mapper.Map<ClanDto>(clan.Value));
     }
 
     [Authorize]
@@ -127,7 +104,7 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
 
-        var result = await _mediator.Send(new SendInviteCommand
+        var result = await mediator.Send(new SendInviteCommand
         {
             ClanId = id,
             NameIdentifier = HttpContext.GetNameIdentifier()
@@ -145,13 +122,13 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
 
-        var result = await _mediator.Send(new GetInvitesCommand
+        var result = await mediator.Send(new GetInvitesCommand
         {
             NameIdentifier = HttpContext.GetNameIdentifier(),
             ClanId = id
         });
         
-        return result.IsSuccess ? Ok(_mapper.Map<IEnumerable<ClanInviteDto>>(result.Value)) : BadRequest(result.Errors);
+        return result.IsSuccess ? Ok(mapper.Map<IEnumerable<ClanInviteDto>>(result.Value)) : BadRequest(result.Errors);
     }
 
     [Authorize]
@@ -163,12 +140,10 @@ public class ClanController : ControllerBase
             return BadRequest();
         }
         
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-
-        var success = await _mediator.Send(new AcceptInviteCommand
+        var success = await mediator.Send(new AcceptInviteCommand
         {
             InviteId = id,
-            UserId = user.Id
+            NameIdentifier = HttpContext.GetNameIdentifier()
         });
 
         return success.IsFailed ? BadRequest(success.Errors) : Ok();
@@ -183,24 +158,13 @@ public class ClanController : ControllerBase
             return BadRequest();
             
         }
-        var user = await _userService.GetOrCreateUser(HttpContext.GetNameIdentifier());
-        var invite = await _context.ClanInvites.FirstOrDefaultAsync(i => i.Id == id);
-        if (invite == null)
+
+        var result = await mediator.Send(new DenyInviteCommand
         {
-            return BadRequest("Invite not found.");
-        }
+            InviteId = id,
+            NameIdentifier = HttpContext.GetNameIdentifier()
+        });
 
-        var clanMember = await _clanRepository.GetClanMemberAsync(user.Id, invite.ClanId);
-
-        if (clanMember.IsFailed || clanMember.Value.Role == ClanMemberRole.Member)
-        {
-            return Forbid();
-        }
-        
-        _context.ClanInvites.Remove(invite);
-        
-        await _context.SaveChangesAsync();
-
-        return Ok();
+        return result.IsSuccess ? Ok() : BadRequest(result.Errors);
     }
 }

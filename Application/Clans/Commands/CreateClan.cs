@@ -5,7 +5,6 @@ using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
 using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
 using MediatR;
 
 namespace Application.Clans.Commands;

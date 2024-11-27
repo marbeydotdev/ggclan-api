@@ -22,7 +22,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         
         await Context.SaveChangesAsync();
 
-        return returnEntities ? Result.Ok(add?.Entity) : Result.Ok();
+        return returnEntities ? Result.Ok<User?>(add.Entity) : Result.Ok();
     }
 
     public async Task<Result<User>> GetAsync(string nameIdentifier)

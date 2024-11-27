@@ -20,17 +20,15 @@ public class Tests
         optionsBuilder.UseInMemoryDatabase("test"); 
         _context = new GgDbContext(optionsBuilder.Options);
         
-        _userRepository = new UserRepository(_context);
-        _userAchievementRepository = new UserAchievementRepository(_context);
+        var userRepository = new UserRepository(_context);
+        var userAchievementRepository = new UserAchievementRepository(_context);
         var mockNotificationService = new Mock<INotificationService>();
         var notificationService = mockNotificationService.Object;
-        _achievementService = new AchievementService(_userAchievementRepository, notificationService);
-        _userService = new UserService(_userRepository, _achievementService);
+        _achievementService = new AchievementService(userAchievementRepository, notificationService);
+        _userService = new UserService(userRepository, _achievementService);
         _clanRepository = new ClanRepository(_context);
     }
 
-    private readonly UserRepository _userRepository;
-    private readonly UserAchievementRepository _userAchievementRepository;
     private readonly AchievementService _achievementService;
     private readonly UserService _userService;
     private readonly ClanRepository _clanRepository;
@@ -73,7 +71,4 @@ public class Tests
         
         Assert.Fail();
     }
-    
-    [Test]
-    public async Task 
 }

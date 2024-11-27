@@ -3,7 +3,6 @@ using Application.Users.Services;
 using Domain.Entities;
 using FluentResults;
 using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
 using MediatR;
 
 namespace Application.Clans.Queries;

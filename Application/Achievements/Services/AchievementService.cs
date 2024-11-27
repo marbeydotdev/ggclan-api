@@ -2,7 +2,6 @@ using Domain.Entities;
 using Domain.Interfaces;
 using FluentResults;
 using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
 
 namespace Application.Achievements.Services;
 
