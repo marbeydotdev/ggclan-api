@@ -11,7 +11,6 @@ COPY WebAPI/WebAPI.csproj WebAPI/
 COPY Application/Application.csproj Application/
 COPY Domain/Domain.csproj Domain/
 COPY Infrastructure/Infrastructure.csproj Infrastructure/
-COPY Application.Tests/Application.Tests.csproj Application.Tests/
 RUN dotnet restore
 
 # Copy all sources after restore for full build
