@@ -15,7 +15,7 @@ using Moq;
 namespace Application.Tests;
 
 [TestFixture]
-public class Tests
+public class ClanTests
 {
     [SetUp]
     public async Task Setup()
@@ -40,7 +40,7 @@ public class Tests
     private UserService _userService;
     private IGenericRepository<ClanInvite> _clanInviteRepository;
 
-    public Tests()
+    public ClanTests()
     {
         var optionsBuilder = new DbContextOptionsBuilder<GgDbContext>();
         optionsBuilder.UseInMemoryDatabase("test");
@@ -54,8 +54,10 @@ public class Tests
     {
         _userRepository = new UserRepository(_context);
         _userAchievementRepository = new UserAchievementRepository(_context);
+
         var mockNotificationService = new Mock<INotificationService>();
         _notificationService = mockNotificationService.Object;
+
         _achievementService = new AchievementService(_userAchievementRepository, _notificationService);
         _userService = new UserService(_userRepository, _achievementService);
         _clanInviteRepository = new GenericRepository<ClanInvite>(_context);
@@ -67,7 +69,7 @@ public class Tests
             new GenericRepository<ClanInvite>(_context), new GenericRepository<ClanMember>(_context));
     }
 
-    private async Task<Result<Clan>> CreateClan()
+    private async Task<Result<Clan>> CreateClan(bool privateClan = false)
     {
         var handler = new CreateClanCommandHandler(_userService, _clanRepository, _achievementService);
         var command = new CreateClanCommand
@@ -78,7 +80,7 @@ public class Tests
                 Name = TestClanName,
                 Description = string.Empty,
                 Game = string.Empty,
-                Private = false
+                Private = privateClan
             }
         };
 
@@ -160,6 +162,38 @@ public class Tests
         if (!result.IsSuccess)
         {
             Assert.Fail(string.Join(" | ", result.Errors));
+        }
+
+        Assert.Pass();
+    }
+
+    [Test]
+    public async Task GivenAlreadyParticipatingUser_SendInviteCommandHandler_Fails()
+    {
+        await CreateClan();
+        await SendInvite();
+        await AcceptInvite();
+
+        var result = await SendInvite();
+
+        if (result.IsSuccess)
+        {
+            Assert.Fail("Already participating user can send invite to same clan.");
+        }
+
+        Assert.Pass();
+    }
+
+    [Test]
+    public async Task GivenPrivateClan_SendInviteCommandHandler_Fails()
+    {
+        await CreateClan(true);
+
+        var result = await SendInvite();
+
+        if (result.IsSuccess)
+        {
+            Assert.Fail("User can send invite to private clan.");
         }
 
         Assert.Pass();
