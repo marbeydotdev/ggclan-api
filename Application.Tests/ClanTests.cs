@@ -191,7 +191,7 @@ public class ClanTests
 
         var result = await SendInvite();
 
-        if (result.IsSuccess)
+        if (!result.IsSuccess)
         {
             Assert.Fail("User can send invite to private clan.");
         }

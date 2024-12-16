@@ -6,12 +6,13 @@ namespace Application.Clans.Services;
 
 public class ClanService : IClanService
 {
-    private readonly IGenericRepository<ClanInvite> _clanInviteRepository;
-    private readonly IClanRepository _clanRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
+    private readonly IGenericRepository<ClanInvite> _clanInviteRepository;
     private readonly IGenericRepository<ClanMember> _clanMemberRepository;
+    private readonly IClanRepository _clanRepository;
 
-    public ClanService(IChatMessageRepository chatMessageRepository, IClanRepository clanRepository, IGenericRepository<ClanInvite> clanInviteRepository, IGenericRepository<ClanMember> clanMemberRepository)
+    public ClanService(IChatMessageRepository chatMessageRepository, IClanRepository clanRepository,
+        IGenericRepository<ClanInvite> clanInviteRepository, IGenericRepository<ClanMember> clanMemberRepository)
     {
         _chatMessageRepository = chatMessageRepository;
         _clanRepository = clanRepository;
@@ -25,19 +26,20 @@ public class ClanService : IClanService
         {
             return Result.Fail("Unauthorized");
         }
-        
+
         var clan = await _clanRepository.GetAsync(c => c.Id == clanId);
-        
+
         return clan;
     }
-    
-    public async Task<Result<List<ClanMessage>>> GetClanMessages(int userId, int clanId, int skip, int limit, int? afterId = null)
+
+    public async Task<Result<List<ClanMessage>>> GetClanMessages(int userId, int clanId, int skip, int limit,
+        int? afterId = null)
     {
         if (!await UserHasAccessToClan(userId, clanId))
         {
             return Result.Fail("Access denied.");
         }
-        
+
         Result<List<ClanMessage>> messages;
 
         if (afterId.HasValue)
@@ -50,7 +52,7 @@ public class ClanService : IClanService
             messages = await _chatMessageRepository.GetAllAsync(
                 m => m.ClanId == clanId, skip, limit, m => m.Created, false);
         }
-        
+
         return messages;
     }
 
@@ -67,7 +69,7 @@ public class ClanService : IClanService
             return Result.Fail("Already in clan.");
         }
 
-        if (!await _clanRepository.AnyAsync(c => c.Id == clanId && !c.Private))
+        if (await _clanRepository.AnyAsync(c => c.Id == clanId && c.Private))
         {
             return Result.Fail("Clan is private.");
         }
@@ -76,7 +78,7 @@ public class ClanService : IClanService
         {
             return Result.Fail("An invite has already been sent.");
         }
-        
+
         return Result.Ok();
     }
 }
